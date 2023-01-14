@@ -4,14 +4,18 @@ export WaveFuncParam, flattened_to_lower, flattened_to_symmetric
     
 """
    n: Number of quasiparticles (= one less than the number of actual particles)
-   L_flattened: n(n+1)/2 elements of the lower-triangular Cholesky factor L
-   B_flattened: n(n+1)/2 unique elements of the symmetric matrix B
+   M: Number of explicitly correlated basis functions
+   C: The vector of linear expansion coefficients
+   L_flattened: For each of the M basis functions: vector of n(n+1)/2 elements of the lower-triangular Cholesky factor L
+   B_flattened: For each of the M basis functions: vector of n(n+1)/2 unique elements of the symmetric matrix B
 
 """
 struct WaveFuncParam
     n::Int64
-    L_flattened::Vector{Float64}
-    B_flattened::Vector{Float64}
+    M::Int64
+    C::Vector{Float64}
+    L_flattened::Vector{Vector{Float64}}
+    B_flattened::Vector{Vector{Float64}}
 end
 
 """
