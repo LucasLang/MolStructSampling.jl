@@ -1,0 +1,4 @@
+name = "MolStructSampling"
+uuid = "8915ac88-2a60-4355-906a-18cbae34be0c"
+authors = ["Lucas Lang <lucas.lang@kjemi.uio.no>"]
+version = "0.1.0"
