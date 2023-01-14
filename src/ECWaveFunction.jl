@@ -18,6 +18,10 @@ struct WaveFuncParam
     B_flattened::Vector{Vector{Float64}}
 end
 
+struct PseudoParticlePermutation
+    transpositions::Vector{Tuple{Int64, Int64}}
+end
+
 """
 Takes the flattened form of a lower-triangular matrix and assembles the full 2D matrix
 
