@@ -17,6 +17,11 @@ struct PseudoParticlePermutation
     transpositions::Vector{Transposition}
 end
 
+function PseudoParticlePermutation(indices::Vector{Tuple{Int64, Int64}})
+    transpositions = [Transposition(tuple) for tuple in indices]
+    return PseudoParticlePermutation(transpositions)
+end
+
 """
     coeffs: prefactors of the permutation operators
     permutations: actual permutations whose linear combination is taken
@@ -113,6 +118,18 @@ function transposition_matrix_pseudo_other(n::Integer, transposition::Transposit
     T[:, i-1] = col_jm1
     T[:, j-1] = col_im1
     return T
+end
+
+"""
+Returns the permutation matrix acting on pseudoparticle coordinates.
+"""
+function permutation_matrix_pseudo(n::Integer, p::PseudoParticlePermutation)
+    transposition_matrices = [transposition_matrix_pseudo(n, t) for t in p.transpositions]
+    matrix_product = Matrix{Float64}(I, n, n)
+    for matrix in transposition_matrices
+        matrix_product = matrix_product*matrix
+    end
+    return matrix_product
 end
 
 """

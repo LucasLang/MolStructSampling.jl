@@ -46,6 +46,18 @@ function test_transposition_matrix_2()
     return ECWaveFunction.transposition_matrix_pseudo(n, t) ≈ ref
 end
 
+function test_permutation_matrix()
+    transpositions = [(1, 3), (4, 5)]
+    p = ECWaveFunction.PseudoParticlePermutation(transpositions)
+    n = 4
+    ref = [1.0  -1.0  0.0  0.0
+           0.0  -1.0  0.0  0.0
+           0.0  -1.0  0.0  1.0
+           0.0  -1.0  1.0  0.0]
+    return ECWaveFunction.permutation_matrix_pseudo(n, p) ≈ ref
+end
+
+
 
 
 @testset "Module ECWaveFunction" begin
@@ -55,5 +67,6 @@ end
     @test test_get_indices()
     @test test_transposition_matrix_1()
     @test test_transposition_matrix_2()
+    @test test_permutation_matrix()
 end
 
