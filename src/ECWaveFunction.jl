@@ -1,9 +1,20 @@
 module ECWaveFunction
 
+using LinearAlgebra
+
 export WaveFuncParam, flattened_to_lower, flattened_to_symmetric
     
+struct Transposition
+    indices::Tuple{Int64, Int64}
+    Transposition(indices) = indices[1] > indices[2] ? error("Wrong order of indices in transposition") : new(indices)
+end
+
+function get_indices(t::Transposition)
+    return t.indices[1], t.indices[2]
+end
+
 struct PseudoParticlePermutation
-    transpositions::Vector{Tuple{Int64, Int64}}
+    transpositions::Vector{Transposition}
 end
 
 """
@@ -62,10 +73,46 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
             L = flattened_to_lower(n, param.L_flattened[k])
             A = L*L'
             B = flattened_to_symmetric(n, param.B_flattened[k])
-            A[k, i] = CONTINUE LATER
-            B[k, i] = CONTINUE LATER
+            #A[k, i] = CONTINUE LATER
+            #B[k, i] = CONTINUE LATER
         end
     end
+end
+
+"""
+Returns the transposition matrix acting on pseudoparticle coordinates.
+"""
+function transposition_matrix_pseudo(n::Integer, transposition::Transposition)
+    i, j = get_indices(transposition)    # i is smaller than j
+    if i==1
+        return transposition_matrix_pseudo_ref(n, j)
+    else
+        return transposition_matrix_pseudo_other(n, transposition)
+    end
+end
+
+"""
+Returns the transposition matrix acting on pseudoparticle coordinates
+for the case where the reference particle (index 1) is involved.
+"""
+function transposition_matrix_pseudo_ref(n::Integer, j::Int)
+    T = Matrix{Float64}(I, n, n)
+    T[:, j-1] .= -1.0
+    return T
+end
+
+"""
+Returns the transposition matrix acting on pseudoparticle coordinates
+for the case where the reference particle (index 1) is not involved.
+"""
+function transposition_matrix_pseudo_other(n::Integer, transposition::Transposition)
+    T = Matrix{Float64}(I, n, n)
+    i, j = get_indices(transposition)
+    col_im1 = T[:, i-1]
+    col_jm1 = T[:, j-1]
+    T[:, i-1] = col_jm1
+    T[:, j-1] = col_im1
+    return T
 end
 
 """
