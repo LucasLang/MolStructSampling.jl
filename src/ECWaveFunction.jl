@@ -71,11 +71,14 @@ struct WaveFuncParamProcessed
     p_coeffs::Vector{Float64}
 end
 
+⊗ = kron    # writing Kronecker product as operator (infix form)
+
 function WaveFuncParamProcessed(param::WaveFuncParam)
     n = param.n
     M = param.M
     Y = param.Y
     p_matrices = [permutation_matrix_pseudo(n, p) for p in param.Y.permutations]
+    id3 = Matrix{Float64}(I, 3, 3)      # 3x3 identity matrix
     A = Matrix{Matrix{Float64}}(undef, M, length(Y))
     B = Matrix{Matrix{Float64}}(undef, M, length(Y))
     for k in 1:M
@@ -83,8 +86,10 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
         Ak = L*L'
         Bk = flattened_to_symmetric(n, param.B_flattened[k])
         for i in 1:length(Y)
-            A[k, i] = p_matrices[i]'*Ak*p_matrices[i]
-            B[k, i] = p_matrices[i]'*Bk*p_matrices[i]
+            Aki = p_matrices[i]'*Ak*p_matrices[i]
+            Bki = p_matrices[i]'*Bk*p_matrices[i]
+            A[k, i] = Aki ⊗ id3
+            B[k, i] = Bki ⊗ id3
         end
     end
     return WaveFuncParamProcessed(n, M, param.C, A, B, Y.coeffs)
@@ -183,6 +188,13 @@ Calculates the positive definite A matrix from the wavefunction parameters
 function calc_A(param::WaveFuncParam)
     L = flattened_to_lower(param.n, param.L_flattened)
     return L*L'
+end
+
+function calc_probability_density(r::Vector{Float64}, par::WaveFuncParamProcessed)
+    permuted_basis_values = [exp(-r'*par.A[k, i]*r -r'*par.B[k, i]*r*im) for k in 1:par.M, i in 1:length(par.p_coeffs)]
+    projected_basis_values = [par.p_coeffs'*permuted_basis_values[k, :] for k in 1:par.M]
+    wavefunction_value = par.C'*projected_basis_values
+    return abs2(wavefunction_value)
 end
 
 
