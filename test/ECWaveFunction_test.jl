@@ -1,4 +1,6 @@
 using Test
+using LinearAlgebra
+
 include("../src/ECWaveFunction.jl")
 using Main.ECWaveFunction
 
@@ -56,6 +58,25 @@ function test_permutation_matrix()
            0.0  -1.0  1.0  0.0]
     return ECWaveFunction.permutation_matrix_pseudo(n, p) ≈ ref
 end
+"""
+function test_WaveFuncParamProcessed()
+    n = 3
+    M = 2
+    C = [10.0, 11.0]
+    L_flattened = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+                   [7.0, 8.0, 9.0, 10.0, 11.0, 12.0]]
+    B_flattened = [[13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
+                   [19.0, 20.0, 21.0, 22.0, 23.0, 24.0]]
+    Y = 
+end
+"""
+
+function test_identity_permutation()
+    p = ECWaveFunction.PseudoParticlePermutation([])
+    n = 4
+    ref = Matrix{Float64}(I, n, n)
+    return ECWaveFunction.permutation_matrix_pseudo(n, p) ≈ ref
+end
 
 
 
@@ -68,5 +89,7 @@ end
     @test test_transposition_matrix_1()
     @test test_transposition_matrix_2()
     @test test_permutation_matrix()
+    #@test test_WaveFuncParamProcessed()
+    @test test_identity_permutation()
 end
 

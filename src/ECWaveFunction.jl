@@ -31,6 +31,8 @@ struct YoungOperator
     permutations::Vector{PseudoParticlePermutation}
 end
 
+length(Y::YoungOperator) = length(Y.coeffs)
+
 """
     n: Number of quasiparticles (= one less than the number of actual particles)
     M: Number of explicitly correlated basis functions
@@ -49,13 +51,14 @@ struct WaveFuncParam
     Y::YoungOperator
 end
 
+
 """
     n: Number of quasiparticles (= one less than the number of actual particles)
     M: Number of explicitly correlated basis functions
     C: The vector of linear expansion coefficients
     A[k, i]: A matrix of the ith permutation applied to the kth basis function
     B[k, i]: B matrix of the ith permutation applied to the kth basis function
-    perm_coeffs: The coefficients of the permutations in the Young operator
+    p_coeffs: The coefficients of the permutations in the Young operator
 """
 struct WaveFuncParamProcessed
     n::Int64
@@ -63,25 +66,25 @@ struct WaveFuncParamProcessed
     C::Vector{Float64}
     A::Matrix{Matrix{Float64}}
     B::Matrix{Matrix{Float64}}
-    perm_coeffs::Vector{Float64}
+    p_coeffs::Vector{Float64}
 end
 
 function WaveFuncParamProcessed(param::WaveFuncParam)
     n = param.n
     M = param.M
-    C = param.C
-    perm_len = length(Y.coeffs)
+    p_matrices = [permutation_matrix_pseudo(n, p) for p in param.Y.permutations]
     A = Matrix{Matrix{Float64}}(undef, M, perm_len)
     B = Matrix{Matrix{Float64}}(undef, M, perm_len)
     for k in 1:M
-        for i in 1:perm_len
-            L = flattened_to_lower(n, param.L_flattened[k])
-            A = L*L'
-            B = flattened_to_symmetric(n, param.B_flattened[k])
-            #A[k, i] = CONTINUE LATER
-            #B[k, i] = CONTINUE LATER
+        L = flattened_to_lower(n, param.L_flattened[k])
+        Ak = L*L'
+        Bk = flattened_to_symmetric(n, param.B_flattened[k])
+        for i in 1:length(Y)
+            A[k, i] = p_matrices[i]'*Ak*p_matrices[i]
+            B[k, i] = p_matrices[i]'*Bk*p_matrices[i]
         end
     end
+    return WaveFuncParamProcessed(n, M, param.C, A, B, param.Y.coeffs)
 end
 
 """
@@ -125,7 +128,7 @@ Returns the permutation matrix acting on pseudoparticle coordinates.
 """
 function permutation_matrix_pseudo(n::Integer, p::PseudoParticlePermutation)
     transposition_matrices = [transposition_matrix_pseudo(n, t) for t in p.transpositions]
-    matrix_product = Matrix{Float64}(I, n, n)
+    matrix_product = Matrix{Float64}(I, n, n)   # if there are no transpositions: return identity
     for matrix in transposition_matrices
         matrix_product = matrix_product*matrix
     end
