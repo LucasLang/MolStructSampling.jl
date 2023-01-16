@@ -58,7 +58,7 @@ function test_permutation_matrix()
            0.0  -1.0  1.0  0.0]
     return ECWaveFunction.permutation_matrix_pseudo(n, p) ≈ ref
 end
-"""
+
 function test_WaveFuncParamProcessed()
     n = 3
     M = 2
@@ -67,9 +67,28 @@ function test_WaveFuncParamProcessed()
                    [7.0, 8.0, 9.0, 10.0, 11.0, 12.0]]
     B_flattened = [[13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
                    [19.0, 20.0, 21.0, 22.0, 23.0, 24.0]]
-    Y = 
+    transpositions_tuples = [[], [(1, 3), (3, 4)]]
+    transpositions = [[ECWaveFunction.Transposition(tuple) for tuple in p] for p in transpositions_tuples]
+    Y = ECWaveFunction.YoungOperator([1.0, -1.0], [ECWaveFunction.PseudoParticlePermutation(p) for p in transpositions])
+    param = WaveFuncParam(n, M, C, L_flattened, B_flattened, Y)
+    param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
+
+    ref_A21 = [49.0   56.0   63.0;
+               56.0  164.0  182.0;
+               63.0  182.0  346.0]
+    ref_A22 = [49.0    63.0  -168.0;
+               63.0   346.0  -591.0;
+             -168.0  -591.0  1161.0]
+    ref_B12 = [ 13.0   15.0  -42.0;
+                15.0   18.0  -50.0;
+               -42.0  -50.0  139.0]
+    c1 = param_processed.C ≈ param.C
+    c2 = param_processed.p_coeffs ≈ param.Y.coeffs
+    c3 = param_processed.A[2, 1] ≈ ref_A21
+    c4 = param_processed.A[2, 2] ≈ ref_A22
+    c5 = param_processed.B[1, 2] ≈ ref_B12
+    return c1 && c2 && c3 && c4 && c5
 end
-"""
 
 function test_identity_permutation()
     p = ECWaveFunction.PseudoParticlePermutation([])
@@ -89,7 +108,7 @@ end
     @test test_transposition_matrix_1()
     @test test_transposition_matrix_2()
     @test test_permutation_matrix()
-    #@test test_WaveFuncParamProcessed()
+    @test test_WaveFuncParamProcessed()
     @test test_identity_permutation()
 end
 

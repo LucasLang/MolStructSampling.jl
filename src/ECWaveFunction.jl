@@ -2,6 +2,8 @@ module ECWaveFunction
 
 using LinearAlgebra
 
+import Base.length
+
 export WaveFuncParam, flattened_to_lower, flattened_to_symmetric
     
 struct Transposition
@@ -72,9 +74,10 @@ end
 function WaveFuncParamProcessed(param::WaveFuncParam)
     n = param.n
     M = param.M
+    Y = param.Y
     p_matrices = [permutation_matrix_pseudo(n, p) for p in param.Y.permutations]
-    A = Matrix{Matrix{Float64}}(undef, M, perm_len)
-    B = Matrix{Matrix{Float64}}(undef, M, perm_len)
+    A = Matrix{Matrix{Float64}}(undef, M, length(Y))
+    B = Matrix{Matrix{Float64}}(undef, M, length(Y))
     for k in 1:M
         L = flattened_to_lower(n, param.L_flattened[k])
         Ak = L*L'
@@ -84,7 +87,7 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
             B[k, i] = p_matrices[i]'*Bk*p_matrices[i]
         end
     end
-    return WaveFuncParamProcessed(n, M, param.C, A, B, param.Y.coeffs)
+    return WaveFuncParamProcessed(n, M, param.C, A, B, Y.coeffs)
 end
 
 """
