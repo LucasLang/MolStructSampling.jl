@@ -6,6 +6,8 @@ import Base.length
 
 export WaveFuncParam, flattened_to_lower, flattened_to_symmetric
     
+include("Auxiliary.jl")
+
 struct Transposition
     indices::Tuple{Int64, Int64}
     Transposition(indices) = indices[1] > indices[2] ? error("Wrong order of indices in transposition") : new(indices)
@@ -70,8 +72,6 @@ struct WaveFuncParamProcessed
     B::Matrix{Matrix{Float64}}
     p_coeffs::Vector{Float64}
 end
-
-⊗ = kron    # writing Kronecker product as operator (infix form)
 
 function WaveFuncParamProcessed(param::WaveFuncParam)
     n = param.n

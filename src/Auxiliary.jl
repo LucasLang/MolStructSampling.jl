@@ -1,0 +1,1 @@
+⊗ = kron    # writing Kronecker product as operator (infix form)
