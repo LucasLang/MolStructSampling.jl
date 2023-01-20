@@ -24,12 +24,31 @@ function MCrun_test()
     r_start = [1.0, 0.0, 0.0]
     widths = [0.3]
     nsteps = 1000000
-    samples = MCrun(prob_dens, n, nsteps, r_start, widths)
+    samples, accepted_rejected = MCrun(prob_dens, n, nsteps, r_start, widths)
     r_values = [sqrt(samples[:,i]'*samples[:,i]) for i in 1:nsteps]
     r_mean = mean(r_values)
     return (r_mean>0.75) && (r_mean<0.85)
 end
 
+function accepted_rejected_test()
+    # this test wavefunction is simply exp(-r^2), i.e. density = exp(-2r^2)
+    n = 1
+    M = 1
+    C = [1.0]
+    L_flattened = [[1.0]]
+    B_flattened = [[0.0]]
+    Y = ECWaveFunction.YoungOperator([1.0], [ECWaveFunction.PseudoParticlePermutation([])])
+    param = WaveFuncParam(n, M, C, L_flattened, B_flattened, Y)
+    param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
+    prob_dens(r) = ECWaveFunction.calc_probability_density(r, param_processed)
+    r_start = [1.0, 0.0, 0.0]
+    widths = [0.3]
+    nsteps = 10000
+    samples, accepted_rejected = MCrun(prob_dens, n, nsteps, r_start, widths)
+    return sum(accepted_rejected) == nsteps
+end
+
 @testset "Module MCSampling" begin
     @test MCrun_test()
+    @test accepted_rejected_test()
 end

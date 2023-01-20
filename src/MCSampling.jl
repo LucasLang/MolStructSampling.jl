@@ -15,19 +15,23 @@ include("Auxiliary.jl")
 """
 function MCrun(prob_dens::Function, n::Integer, nsteps::Integer, r_start::Vector{Float64}, widths::Vector{Float64})
     saved_r = Array{Float64}(undef, 3n, nsteps)
+    accepted_rejected = zeros(Int64, n, 2)    # First col: number of accepted, sec col: number of rejected
     r_current = r_start
     P_current = prob_dens(r_current)
     for step in 1:nsteps
-        r_prop = propose_next_coordinates(r_current, n, widths)
+        pp_index, r_prop = propose_next_coordinates(r_current, n, widths)
         P_prop = prob_dens(r_prop)
         A = min(1, P_prop/P_current)
         if rand() < A
             r_current = r_prop
             P_current = P_prop
+            accepted_rejected[pp_index, 1] += 1
+        else
+            accepted_rejected[pp_index, 2] += 1
         end
         saved_r[:, step] = r_current
     end
-    return saved_r
+    return saved_r, accepted_rejected
 end
 
 """
@@ -49,7 +53,8 @@ function propose_next_coordinates(r_current::Vector{Float64}, n::Integer, widths
     displacement = get_random_displacement(widths[pp_index])
     unitvec = zeros(n)
     unitvec[pp_index] = 1.0
-    return r_current + unitvec ⊗ displacement
+    r_prop = r_current + unitvec ⊗ displacement
+    return pp_index, r_prop
 end
 
 end
