@@ -183,8 +183,55 @@ function test_D3plus_invariance()
     r_wrongperm = [rD2; re1; rD3; re2]
     p_wrongperm = prob_dens(r_wrongperm)
     c_inequality = !(p1 ≈ p_wrongperm)
-    #return false
     return c_equality && c_inequality
+end
+
+# The Hamiltonian is nonrelativistic, therefore the wavefunction must be real (or: can only have a global,
+# no local, phase).
+function test_globalphase()
+    param_processed = ECWaveFunction.WaveFuncParamProcessed(ECWaveFunction.read_wavefuncparam("D3plus_param"))
+    wavefunction(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
+    return angle(wavefunction(rand(12))) ≈ angle(wavefunction(rand(12)))
+end
+
+function test_wavefunction()
+    n = 2
+    masses = [3400.0, 1.0, 1.0]
+    charges = [1.0, -1.0, -1.0]
+    M = 2
+    Y = parse(ECWaveFunction.YoungOperator, "(1-P12)")
+    C_linear = rand(2)+rand(2)*im
+    L_flattened = [rand(3) for k in 1:M]
+    B_flattened = [rand(3) for k in 1:M]
+    L = [[flattened[1] 0; flattened[2] flattened[3]] for flattened in L_flattened]
+    A = [L[k]*L[k]' for k in 1:M]
+    B = [[flattened[1] flattened[2]; flattened[2] flattened[3]] for flattened in B_flattened]
+    C = [A[k] + B[k]*im for k in 1:M]
+    param = ECWaveFunction.WaveFuncParam(n, masses, charges, M, C_linear, L_flattened, B_flattened, Y)
+    param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
+    wavefunction(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
+
+    R1 = rand(3)
+    R2 = rand(3)
+    R3 = rand(3)
+    r1 = R2 - R1
+    r2 = R3 - R1
+
+    R1_perm = R2
+    R2_perm = R1
+    R3_perm = R3
+    r1_perm = R2_perm - R1_perm
+    r2_perm = R3_perm - R1_perm
+
+    Phi1 = exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
+    Phi2 = exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
+    Phi1_perm = exp(-(C[1][1,1]*r1_perm'*r1_perm + 2*C[1][1,2]*r1_perm'*r2_perm + C[1][2,2]*r2_perm'*r2_perm))
+    Phi2_perm = exp(-(C[2][1,1]*r1_perm'*r1_perm + 2*C[2][1,2]*r1_perm'*r2_perm + C[2][2,2]*r2_perm'*r2_perm))
+
+    wavefunction_ref = C_linear[1]*(Phi1-Phi1_perm) + C_linear[2]*(Phi2-Phi2_perm)
+
+    r = [r1; r2]
+    return wavefunction_ref ≈ wavefunction(r)
 end
 
 
@@ -205,5 +252,7 @@ end
     @test test_parse_Youngoperator2()
     @test test_readWF()
     @test test_D3plus_invariance()
+    @test_broken test_globalphase()
+    @test test_wavefunction()
 end
 
