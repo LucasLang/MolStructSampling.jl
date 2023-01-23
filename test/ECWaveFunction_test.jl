@@ -165,6 +165,29 @@ function test_readWF()
     return c_n && c_masses && c_charges && c_M && c_C && c_L && c_B && c_Y
 end
 
+function test_D3plus_invariance()
+    param_processed = ECWaveFunction.WaveFuncParamProcessed(ECWaveFunction.read_wavefuncparam("D3plus_param"))
+    prob_dens(r) = ECWaveFunction.calc_probability_density(r, param_processed)
+    dist = 1.720
+    rD2 = re1 = [0.0, 0.0, dist]
+    rD3 = re2 = [(sqrt(3)/2)*dist, 0.0, dist/2]
+    r1 = [rD2; rD3; re1; re2]
+    r2 = [rD3; rD2; re1; re2]
+    r3 = [rD2; rD3; re2; re1]
+    r4 = [rD3; rD2; re2; re1]
+    p1 = prob_dens(r1)
+    p2 = prob_dens(r2)
+    p3 = prob_dens(r3)
+    p4 = prob_dens(r4)
+    c_equality = (p1 ≈ p2) && (p1 ≈ p3) && (p1 ≈ p4)
+    r_wrongperm = [rD2; re1; rD3; re2]
+    p_wrongperm = prob_dens(r_wrongperm)
+    c_inequality = !(p1 ≈ p_wrongperm)
+    #return false
+    return c_equality && c_inequality
+end
+
+
 
 
 
@@ -181,5 +204,6 @@ end
     @test test_parse_Youngoperator1()
     @test test_parse_Youngoperator2()
     @test test_readWF()
+    @test test_D3plus_invariance()
 end
 
