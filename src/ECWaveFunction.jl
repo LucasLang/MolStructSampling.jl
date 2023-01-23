@@ -2,7 +2,7 @@ module ECWaveFunction
 
 using LinearAlgebra
 
-import Base.length
+import Base.length, Base.parse, Base.*, Base.==
 
 export WaveFuncParam, flattened_to_lower, flattened_to_symmetric
     
@@ -26,6 +26,20 @@ function PseudoParticlePermutation(indices::Vector{Tuple{Int64, Int64}})
     return PseudoParticlePermutation(transpositions)
 end
 
+function (==)(p1::PseudoParticlePermutation, p2::PseudoParticlePermutation)
+    l1 = length(p1.transpositions)
+    l2 = length(p2.transpositions)
+    if l1 != l2
+        return false
+    end
+    transpositions_equal = [p1.transpositions[i] == p2.transpositions[i] for i in 1:l1]
+    overall_equality = true
+    for check in transpositions_equal
+        overall_equality = overall_equality && check
+    end
+    return overall_equality
+end
+
 """
     coeffs: prefactors of the permutation operators
     permutations: actual permutations whose linear combination is taken
@@ -36,6 +50,89 @@ struct YoungOperator
 end
 
 length(Y::YoungOperator) = length(Y.coeffs)
+
+function (==)(Y1::YoungOperator, Y2::YoungOperator)
+    return (Y1.coeffs ≈ Y2.coeffs) && (Y1.permutations == Y2.permutations)
+end
+
+function (*)(Y1::YoungOperator, Y2::YoungOperator)
+    coeffs = [c1*c2 for c1 in Y1.coeffs, c2 in Y2.coeffs]
+    permutations = [p1*p2 for p1 in Y1.permutations, p2 in Y2.permutations]
+    return YoungOperator(reshape(coeffs, :), reshape(permutations, :))
+end
+
+function (*)(p1::PseudoParticlePermutation, p2::PseudoParticlePermutation)
+    return PseudoParticlePermutation([p1.transpositions; p2.transpositions])
+end
+
+"""
+Convert a string of the form "1+P13+P23" into a Young operator.
+"""
+function sumstring_to_YoungOperator(str)
+    coeffs = Vector{Float64}()
+    permutations = Vector{PseudoParticlePermutation}()
+    parts = Vector{String}()
+    start = 1
+    for i in 1:length(str)
+        if (str[i] == '+') || (str[i] == '-')
+            append!(parts, [str[start:i-1]])
+            start = i
+        end
+    end
+    append!(parts, [str[start:end]])
+
+    for part in parts
+        if part[1] == '-'        # e.g. part = "-P12"
+            append!(coeffs, [-1.0])
+            part = part[2:end]   # drop prefactor from the string
+        elseif part[1] == '+'   # e.g. part = "+P12"
+            append!(coeffs, [1.0])
+            part = part[2:end]   # drop prefactor from the string
+        else                     # e.g. part = "1"
+            append!(coeffs, [1.0])
+        end
+        if part == "1"
+            append!(permutations, [PseudoParticlePermutation([])])
+        end
+        if part[1] == 'P'
+            transposition = parse(Transposition, part)
+            append!(permutations, [PseudoParticlePermutation([transposition])])
+        end
+    end
+    return YoungOperator(coeffs, permutations)
+end
+
+"""
+Parse strings of the form "P12".
+"""
+function parse(::Type{Transposition}, str)
+    i1 = parse(Int64, str[2])
+    i2 = parse(Int64, str[3])
+    return Transposition((i1, i2))
+end
+
+"""
+Parse strings of the form "(1+P12)(1+P13+P23)(1+P45)".
+"""
+function parse(::Type{YoungOperator}, str)
+    indices_sums = x = Vector{Tuple{Int64,Int64}}()
+    start = -1   # need to define here to make it visible in second block
+    for i in 1:length(str)
+        if str[i] == '('
+            start = i+1
+        end
+        if str[i] == ')'
+            stop = i-1
+            append!(indices_sums, [(start, stop)])
+        end
+    end
+    factors = [sumstring_to_YoungOperator(str[ind[1]:ind[2]]) for ind in indices_sums]
+    Y_total = YoungOperator([1.0], [PseudoParticlePermutation([])])   # initialize as identity operator
+    for factor in factors
+        Y_total = Y_total*factor
+    end
+    return Y_total
+end
 
 """
     n: Number of quasiparticles (= one less than the number of actual particles)

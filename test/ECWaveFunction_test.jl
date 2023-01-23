@@ -115,6 +115,40 @@ function test_identity_permutation()
     return ECWaveFunction.permutation_matrix_pseudo(n, p) ≈ ref
 end
 
+function test_parse_Youngoperator1()
+    str = "(1+P12)(1-P34)"
+    PPP = ECWaveFunction.PseudoParticlePermutation
+    coeffs_ref = [1.0, 1.0, -1.0, -1.0]
+    permutations_ref = [PPP([]),
+                        PPP([(1, 2)]),
+                        PPP([(3, 4)]),
+                        PPP([(1, 2), (3, 4)])]
+    Y_ref = ECWaveFunction.YoungOperator(coeffs_ref, permutations_ref)
+    Y = parse(ECWaveFunction.YoungOperator, str)
+    return Y == Y_ref
+end
+
+function test_parse_Youngoperator2()
+    str = "(1+P12)(1+P13+P23)(1+P45)"
+    PPP = ECWaveFunction.PseudoParticlePermutation
+    coeffs_ref = [1.0 for i in 1:12]
+    permutations_ref = [PPP([]),
+                        PPP([(1, 2)]),
+                        PPP([(1, 3)]),
+                        PPP([(1, 2), (1, 3)]),
+                        PPP([(2, 3)]),
+                        PPP([(1, 2), (2, 3)]),
+                        PPP([(4, 5)]),
+                        PPP([(1, 2), (4, 5)]),
+                        PPP([(1, 3), (4, 5)]),
+                        PPP([(1, 2), (1, 3), (4, 5)]),
+                        PPP([(2, 3), (4, 5)]),
+                        PPP([(1, 2), (2, 3), (4, 5)])]
+    Y_ref = ECWaveFunction.YoungOperator(coeffs_ref, permutations_ref)
+    Y = parse(ECWaveFunction.YoungOperator, str)
+    return Y == Y_ref
+end
+
 
 
 
@@ -128,5 +162,7 @@ end
     @test test_permutation_matrix()
     @test test_WaveFuncParamProcessed()
     @test test_identity_permutation()
+    @test test_parse_Youngoperator1()
+    @test test_parse_Youngoperator2()
 end
 
