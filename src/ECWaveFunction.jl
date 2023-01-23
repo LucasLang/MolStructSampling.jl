@@ -313,12 +313,13 @@ function calc_A(param::WaveFuncParam)
     return L*L'
 end
 
-function calc_probability_density(r::Vector{Float64}, par::WaveFuncParamProcessed)
+function calc_wavefunction(r::Vector{Float64}, par::WaveFuncParamProcessed)
     permuted_basis_values = [exp(-r'*par.A[k, i]*r -r'*par.B[k, i]*r*im) for k in 1:par.M, i in 1:length(par.p_coeffs)]
     projected_basis_values = [par.p_coeffs'*permuted_basis_values[k, :] for k in 1:par.M]
-    wavefunction_value = par.C'*projected_basis_values
-    return abs2(wavefunction_value)
+    return par.C'*projected_basis_values
 end
+
+calc_probability_density(r::Vector{Float64}, par::WaveFuncParamProcessed) = abs2(calc_wavefunction(r, par))
 
 
 end
