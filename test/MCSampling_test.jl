@@ -13,12 +13,14 @@ It is not impossible (but extremely unlikely) that the mean of the samples falls
 function MCrun_test()
     # this test wavefunction is simply exp(-r^2), i.e. density = exp(-2r^2)
     n = 1
+    masses = [1.0, 1.0]
+    charges = [1.0, -1.0]
     M = 1
     C = [1.0]
     L_flattened = [[1.0]]
     B_flattened = [[0.0]]
     Y = ECWaveFunction.YoungOperator([1.0], [ECWaveFunction.PseudoParticlePermutation([])])
-    param = WaveFuncParam(n, M, C, L_flattened, B_flattened, Y)
+    param = WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
     param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
     prob_dens(r) = ECWaveFunction.calc_probability_density(r, param_processed)
     r_start = [1.0, 0.0, 0.0]
@@ -33,12 +35,14 @@ end
 function accepted_rejected_test()
     # this test wavefunction is simply exp(-r^2), i.e. density = exp(-2r^2)
     n = 1
+    masses = [1.0, 1.0]
+    charges = [1.0, -1.0]
     M = 1
     C = [1.0]
     L_flattened = [[1.0]]
     B_flattened = [[0.0]]
     Y = ECWaveFunction.YoungOperator([1.0], [ECWaveFunction.PseudoParticlePermutation([])])
-    param = WaveFuncParam(n, M, C, L_flattened, B_flattened, Y)
+    param = WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
     param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
     prob_dens(r) = ECWaveFunction.calc_probability_density(r, param_processed)
     r_start = [1.0, 0.0, 0.0]

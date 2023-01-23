@@ -1,6 +1,6 @@
 module ECWaveFunction
 
-using LinearAlgebra
+using LinearAlgebra, DelimitedFiles
 
 import Base.length, Base.parse, Base.*, Base.==
 
@@ -145,11 +145,35 @@ end
 """
 struct WaveFuncParam
     n::Int64
+    masses::Vector{Float64}
+    charges::Vector{Float64}
     M::Int64
-    C::Vector{Float64}
+    C::Vector{ComplexF64}
     L_flattened::Vector{Vector{Float64}}
     B_flattened::Vector{Vector{Float64}}
     Y::YoungOperator
+end
+
+"""
+Reads wavefunction parameters from the files inout.txt, coeffs, and gauss_param located in the specified folder.
+"""
+function read_wavefuncparam(folder::String)
+    inout_lines = open(readlines, "$folder/inout.txt")
+    N = parse(Int64, split(inout_lines[1])[2])   # total number of particles
+    n = N-1     # number of pseudoparticles
+    masses = [parse(Float64, replace(split(inout_lines[2])[i+1], "D"=>"E")) for i in 1:N]
+    charges = [parse(Float64, replace(split(inout_lines[3])[i+1], "D"=>"E")) for i in 1:N]
+    Y = parse(YoungOperator, split(inout_lines[4])[2])   # product of Young operators
+    M = parse(Int64, split(inout_lines[5])[2])           # number of complex ECG basis functions
+
+    coeffs_array = readdlm("$folder/coeffs")
+    C = [coeffs_array[i, 2] + coeffs_array[i, 3]*im for i in 1:M]   # linear coefficients
+
+    gauss_param_array = readdlm("$folder/gauss_param")
+    dim_flattened = n*(n+1)÷2
+    L_flattened = [[parse(Float64, replace(gauss_param_array[bf, 1+i], "D"=>"E")) for i in 1:dim_flattened] for bf in 1:M]
+    B_flattened = [[parse(Float64, replace(gauss_param_array[bf, 1+dim_flattened+i], "D"=>"E")) for i in 1:dim_flattened] for bf in 1:M]
+    return WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
 end
 
 
@@ -163,8 +187,10 @@ end
 """
 struct WaveFuncParamProcessed
     n::Int64
+    masses::Vector{Float64}
+    charges::Vector{Float64}
     M::Int64
-    C::Vector{Float64}
+    C::Vector{ComplexF64}
     A::Matrix{Matrix{Float64}}
     B::Matrix{Matrix{Float64}}
     p_coeffs::Vector{Float64}
@@ -189,7 +215,7 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
             B[k, i] = Bki ⊗ id3
         end
     end
-    return WaveFuncParamProcessed(n, M, param.C, A, B, Y.coeffs)
+    return WaveFuncParamProcessed(n, param.masses, param.charges, M, param.C, A, B, Y.coeffs)
 end
 
 """

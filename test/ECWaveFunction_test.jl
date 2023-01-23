@@ -61,6 +61,8 @@ end
 
 function test_WaveFuncParamProcessed()
     n = 3
+    masses = [1.0, 1.0, 1.0, 1.0]
+    charges = [1.0, 1.0, -1.0, -1.0]
     M = 2
     C = [10.0, 11.0]
     L_flattened = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
@@ -70,7 +72,7 @@ function test_WaveFuncParamProcessed()
     transpositions_tuples = [[], [(1, 3), (3, 4)]]
     transpositions = [[ECWaveFunction.Transposition(tuple) for tuple in p] for p in transpositions_tuples]
     Y = ECWaveFunction.YoungOperator([1.0, -1.0], [ECWaveFunction.PseudoParticlePermutation(p) for p in transpositions])
-    param = WaveFuncParam(n, M, C, L_flattened, B_flattened, Y)
+    param = WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
     param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
 
     ref_A21 = [49.0   0.0   0.0   56.0    0.0    0.0   63.0    0.0    0.0;
@@ -149,6 +151,20 @@ function test_parse_Youngoperator2()
     return Y == Y_ref
 end
 
+function test_readWF()
+    folder = "D3plus_param"
+    param = ECWaveFunction.read_wavefuncparam(folder)
+    c_n = param.n == 4
+    c_masses = param.masses ≈ [0.36704829652E+04, 0.36704829652E+04, 0.36704829652E+04, 1.0, 1.0]
+    c_charges = param.charges ≈ [1.0, 1.0, 1.0, -1.0, -1.0]
+    c_M = param.M == 400
+    c_C = (param.C[11] ≈ 0.124456114642243+9.240646041392420E-002im) && (param.C[42] ≈ 0.328701772837231-0.426789750897380im)
+    c_L = param.L_flattened[5][2] ≈ -0.5625016825356735E+00
+    c_B = param.B_flattened[42][5] ≈ 0.9006031655758847E+00
+    c_Y = param.Y == parse(ECWaveFunction.YoungOperator, "(1+P12)(1+P13+P23)(1+P45)")
+    return c_n && c_masses && c_charges && c_M && c_C && c_L && c_B && c_Y
+end
+
 
 
 
@@ -164,5 +180,6 @@ end
     @test test_identity_permutation()
     @test test_parse_Youngoperator1()
     @test test_parse_Youngoperator2()
+    @test test_readWF()
 end
 
