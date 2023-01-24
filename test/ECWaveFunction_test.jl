@@ -153,7 +153,7 @@ end
 
 function test_readWF()
     folder = "D3plus_param"
-    param = ECWaveFunction.read_wavefuncparam(folder)
+    param = ECWaveFunction.WaveFuncParam(folder)
     c_n = param.n == 4
     c_masses = param.masses ≈ [0.36704829652E+04, 0.36704829652E+04, 0.36704829652E+04, 1.0, 1.0]
     c_charges = param.charges ≈ [1.0, 1.0, 1.0, -1.0, -1.0]
@@ -166,7 +166,7 @@ function test_readWF()
 end
 
 function test_D3plus_invariance()
-    param_processed = ECWaveFunction.WaveFuncParamProcessed(ECWaveFunction.read_wavefuncparam("D3plus_param"))
+    param_processed = ECWaveFunction.WaveFuncParamProcessed("D3plus_param")
     prob_dens(r) = ECWaveFunction.calc_probability_density(r, param_processed)
     dist = 1.720
     rD2 = re1 = [0.0, 0.0, dist]
@@ -189,7 +189,7 @@ end
 # The Hamiltonian is nonrelativistic, therefore the wavefunction must be real (or: can only have a global,
 # no local, phase).
 function test_globalphase()
-    param_processed = ECWaveFunction.WaveFuncParamProcessed(ECWaveFunction.read_wavefuncparam("D3plus_param"))
+    param_processed = ECWaveFunction.WaveFuncParamProcessed("D3plus_param")
     wavefunction(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
     return angle(wavefunction(rand(12))) ≈ angle(wavefunction(rand(12)))
 end
@@ -234,6 +234,32 @@ function test_wavefunction()
     return wavefunction_ref ≈ wavefunction(r)
 end
 
+function test_wavefunction2()
+    foldername = "HDplus_param_chopped"
+    param = ECWaveFunction.WaveFuncParam(foldername)
+    L = [[flattened[1] 0; flattened[2] flattened[3]] for flattened in param.L_flattened]
+    A = [L[k]*L[k]' for k in 1:param.M]
+    B = [[flattened[1] flattened[2]; flattened[2] flattened[3]] for flattened in param.B_flattened]
+    C = [A[k] + B[k]*im for k in 1:param.M]
+
+    param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
+    wavefunction(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
+
+    R1 = rand(3)
+    R2 = rand(3)
+    R3 = rand(3)
+    r1 = R2 - R1
+    r2 = R3 - R1
+
+    Phi1 = exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
+    Phi2 = exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
+
+    wavefunction_ref = param.C[1]*Phi1 + param.C[2]*Phi2
+    println(wavefunction_ref)
+    r = [r1; r2]
+    println(r)
+    return wavefunction_ref ≈ wavefunction(r)
+end
 
 
 
@@ -254,5 +280,6 @@ end
     @test test_D3plus_invariance()
     @test_broken test_globalphase()
     @test test_wavefunction()
+    @test test_wavefunction2()
 end
 

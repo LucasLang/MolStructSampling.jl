@@ -157,7 +157,7 @@ end
 """
 Reads wavefunction parameters from the files inout.txt, coeffs, and gauss_param located in the specified folder.
 """
-function read_wavefuncparam(folder::String)
+function WaveFuncParam(folder::String)
     inout_lines = open(readlines, "$folder/inout.txt")
     N = parse(Int64, split(inout_lines[1])[2])   # total number of particles
     n = N-1     # number of pseudoparticles
@@ -175,6 +175,7 @@ function read_wavefuncparam(folder::String)
     B_flattened = [[parse(Float64, replace(gauss_param_array[bf, 1+dim_flattened+i], "D"=>"E")) for i in 1:dim_flattened] for bf in 1:M]
     return WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
 end
+
 
 
 """
@@ -217,6 +218,8 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
     end
     return WaveFuncParamProcessed(n, param.masses, param.charges, M, param.C, A, B, Y.coeffs)
 end
+
+WaveFuncParamProcessed(folder::String) = WaveFuncParamProcessed(WaveFuncParam(folder))
 
 """
 Returns the transposition matrix acting on pseudoparticle coordinates.
