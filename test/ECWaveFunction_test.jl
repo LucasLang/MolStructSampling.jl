@@ -349,6 +349,13 @@ function test_overlap_numeric()
     return c1 && c2 && c3 && c4 && c5 && c6
 end
 
+function test_potential_energy()
+    r = [0.0, 0.0, 1.0, 0.0, 1.0, 0.0]
+    charges = [1, 2, -1]
+    Epot = ECWaveFunction.calc_potential_energy(r, charges)
+    return Epot ≈ (2-1-sqrt(2))
+end
+
 
 
 
@@ -372,5 +379,6 @@ end
     @test test_normconst()
     @test test_numeric_integration()
     @test test_overlap_numeric()
+    @test test_potential_energy()
 end
 

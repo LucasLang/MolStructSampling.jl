@@ -368,4 +368,27 @@ function calc_overlap_3part(Ck::Matrix{T}, Cl::Matrix{T}, endr1::Real, endr2::Re
     return 8*pi^2 *sum(integrand_values)*dr1*dr2*dtheta
 end
 
+"""
+This function calculates the total electrostatic interaction energy of charged particles at
+fixed positions.
+r: Vector containing the coordinates of the 2nd through the Nth particle with respect to particle 1.
+charges: The charges (in atomic units) of all N particles
+
+This function returns the interaction energy in atomic units (i.e., Hartree).
+"""
+function calc_potential_energy(r::Vector{T1}, charges::Vector{T2}) where {T1 <: Real,T2 <: Real}
+    n = length(r)÷3
+    N = n+1   # total number of particles
+    coord_vecs_pp = [r[(1+(i-1)*3):(3+(i-1)*3)] for i in 1:n]
+    coord_vecs = [[[0.0, 0.0, 0.0]]; coord_vecs_pp]              # add coordinates of the reference particle
+    E_pot = 0.0
+    for i in 1:N
+        for j in (i+1):N
+            diffvec = coord_vecs[i] - coord_vecs[j]
+            E_pot += charges[i]*charges[j]/sqrt(diffvec'*diffvec)
+        end
+    end
+    return E_pot
+end
+
 end
