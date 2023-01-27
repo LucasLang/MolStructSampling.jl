@@ -103,7 +103,7 @@ function test_WaveFuncParamProcessed()
                -42.0   -0.0   -0.0  -50.0   -0.0   -0.0  139.0    0.0    0.0;
                 -0.0  -42.0   -0.0   -0.0  -50.0   -0.0    0.0  139.0    0.0;
                 -0.0   -0.0  -42.0   -0.0   -0.0  -50.0    0.0    0.0  139.0]
-    c1 = param_processed.C ≈ norm_consts .* param.C
+    c1 = param_processed.C ≈ norm_consts .* reverse(param.C)
     c2 = param_processed.p_coeffs ≈ param.Y.coeffs
     c3 = param_processed.A[2, 1] ≈ ref_A21
     c4 = param_processed.A[2, 2] ≈ ref_A22
@@ -190,9 +190,18 @@ end
 # The Hamiltonian is nonrelativistic, therefore the wavefunction must be real (or: can only have a global,
 # no local, phase).
 function test_globalphase()
-    param_processed = ECWaveFunction.WaveFuncParamProcessed("D3plus_param")
+    param_processed = ECWaveFunction.WaveFuncParamProcessed("HDplus_param")
     wavefunction(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
-    return angle(wavefunction(rand(12))) ≈ angle(wavefunction(rand(12)))
+    # Several trial coordinates with internuclear distance close to Born-Oppenheimer distance of about 2 Bohrs:
+    r1 = [0.0, 0.0, 1.9, 0.0, 0.5, 1.0]
+    r2 = [0.0, 0.0, 2.2, 0.0, 0.0, 0.0]
+    r3 = [0.0, 0.0, 2.0, 0.0, 0.0, 2.0]
+    
+    c1 = abs(angle(wavefunction(r1))) < 0.01
+    c2 = abs(angle(wavefunction(r2))) < 0.01
+    c3 = abs(angle(wavefunction(r3))) < 0.01
+
+    return c1 && c2 && c3
 end
 
 function test_wavefunction()
@@ -230,7 +239,7 @@ function test_wavefunction()
     Phi1_perm = norm_consts[1]*exp(-(C[1][1,1]*r1_perm'*r1_perm + 2*C[1][1,2]*r1_perm'*r2_perm + C[1][2,2]*r2_perm'*r2_perm))
     Phi2_perm = norm_consts[2]*exp(-(C[2][1,1]*r1_perm'*r1_perm + 2*C[2][1,2]*r1_perm'*r2_perm + C[2][2,2]*r2_perm'*r2_perm))
 
-    wavefunction_ref = C_linear[1]*(Phi1-Phi1_perm) + C_linear[2]*(Phi2-Phi2_perm)
+    wavefunction_ref = C_linear[2]*(Phi1-Phi1_perm) + C_linear[1]*(Phi2-Phi2_perm) # need to reverse coeffs
 
     r = [r1; r2]
     return wavefunction_ref ≈ wavefunction(r)
@@ -254,10 +263,10 @@ function test_wavefunction2()
     r1 = R2 - R1
     r2 = R3 - R1
 
-    Phi1 = norm_consts[1]*exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
-    Phi2 = norm_consts[2]*exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
+    Phi1 = exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
+    Phi2 = exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
 
-    wavefunction_ref = param.C[1]*Phi1 + param.C[2]*Phi2
+    wavefunction_ref = param_processed.C[1]*Phi1 + param_processed.C[2]*Phi2
     r = [r1; r2]
     return wavefunction_ref ≈ wavefunction(r)
 end
@@ -357,7 +366,7 @@ end
     @test test_parse_Youngoperator2()
     @test test_readWF()
     @test test_D3plus_invariance()
-    @test_broken test_globalphase()
+    @test test_globalphase()
     @test test_wavefunction()
     @test test_wavefunction2()
     @test test_normconst()

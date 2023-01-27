@@ -217,7 +217,7 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
     id3 = Matrix{Float64}(I, 3, 3)      # 3x3 identity matrix
     A = Matrix{Matrix{Float64}}(undef, M, length(Y))
     B = Matrix{Matrix{Float64}}(undef, M, length(Y))
-    coeffs_normalized = deepcopy(param.C)
+    coeffs_normalized = reverse(deepcopy(param.C))   # the order of basis functions in Ludwik's code is reversed!
     for k in 1:M
         L = flattened_to_lower(n, param.L_flattened[k])
         norm_const = calc_norm_const(L)
