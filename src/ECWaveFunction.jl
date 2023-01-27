@@ -176,6 +176,18 @@ function WaveFuncParam(folder::String)
     return WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
 end
 
+"""
+Calculates the normalization constant for complex explicitly correlated Gaussian basis functions.
+Input L must be a lower triangular matrix.
+"""
+function calc_norm_const(L::Matrix{Float64})
+    n = size(L)[1]
+    detL = 1.0    # determinant of L
+    for i in 1:n
+        detL *= L[i,i]
+    end
+    return ((2/pi)^n * detL^2)^(3/4)
+end
 
 
 """
@@ -205,8 +217,11 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
     id3 = Matrix{Float64}(I, 3, 3)      # 3x3 identity matrix
     A = Matrix{Matrix{Float64}}(undef, M, length(Y))
     B = Matrix{Matrix{Float64}}(undef, M, length(Y))
+    coeffs_normalized = deepcopy(param.C)
     for k in 1:M
         L = flattened_to_lower(n, param.L_flattened[k])
+        norm_const = calc_norm_const(L)
+        coeffs_normalized[k] *= norm_const
         Ak = L*L'
         Bk = flattened_to_symmetric(n, param.B_flattened[k])
         for i in 1:length(Y)
@@ -216,7 +231,7 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
             B[k, i] = Bki ⊗ id3
         end
     end
-    return WaveFuncParamProcessed(n, param.masses, param.charges, M, param.C, A, B, Y.coeffs)
+    return WaveFuncParamProcessed(n, param.masses, param.charges, M, coeffs_normalized, A, B, Y.coeffs)
 end
 
 WaveFuncParamProcessed(folder::String) = WaveFuncParamProcessed(WaveFuncParam(folder))

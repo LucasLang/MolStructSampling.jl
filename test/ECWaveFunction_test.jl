@@ -67,6 +67,7 @@ function test_WaveFuncParamProcessed()
     C = [10.0, 11.0]
     L_flattened = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
                    [7.0, 8.0, 9.0, 10.0, 11.0, 12.0]]
+    norm_consts = [(2^3 *(flattened[1]*flattened[4]*flattened[6])^2 / (pi^3))^0.75 for flattened in L_flattened]
     B_flattened = [[13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
                    [19.0, 20.0, 21.0, 22.0, 23.0, 24.0]]
     transpositions_tuples = [[], [(1, 3), (3, 4)]]
@@ -102,7 +103,7 @@ function test_WaveFuncParamProcessed()
                -42.0   -0.0   -0.0  -50.0   -0.0   -0.0  139.0    0.0    0.0;
                 -0.0  -42.0   -0.0   -0.0  -50.0   -0.0    0.0  139.0    0.0;
                 -0.0   -0.0  -42.0   -0.0   -0.0  -50.0    0.0    0.0  139.0]
-    c1 = param_processed.C ≈ param.C
+    c1 = param_processed.C ≈ norm_consts .* param.C
     c2 = param_processed.p_coeffs ≈ param.Y.coeffs
     c3 = param_processed.A[2, 1] ≈ ref_A21
     c4 = param_processed.A[2, 2] ≈ ref_A22
@@ -204,6 +205,7 @@ function test_wavefunction()
     L_flattened = [rand(3) for k in 1:M]
     B_flattened = [rand(3) for k in 1:M]
     L = [[flattened[1] 0; flattened[2] flattened[3]] for flattened in L_flattened]
+    norm_consts = [(2^2 *(Lk[1,1]*Lk[2,2])^2 / (pi^2))^0.75 for Lk in L]
     A = [L[k]*L[k]' for k in 1:M]
     B = [[flattened[1] flattened[2]; flattened[2] flattened[3]] for flattened in B_flattened]
     C = [A[k] + B[k]*im for k in 1:M]
@@ -223,10 +225,10 @@ function test_wavefunction()
     r1_perm = R2_perm - R1_perm
     r2_perm = R3_perm - R1_perm
 
-    Phi1 = exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
-    Phi2 = exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
-    Phi1_perm = exp(-(C[1][1,1]*r1_perm'*r1_perm + 2*C[1][1,2]*r1_perm'*r2_perm + C[1][2,2]*r2_perm'*r2_perm))
-    Phi2_perm = exp(-(C[2][1,1]*r1_perm'*r1_perm + 2*C[2][1,2]*r1_perm'*r2_perm + C[2][2,2]*r2_perm'*r2_perm))
+    Phi1 = norm_consts[1]*exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
+    Phi2 = norm_consts[2]*exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
+    Phi1_perm = norm_consts[1]*exp(-(C[1][1,1]*r1_perm'*r1_perm + 2*C[1][1,2]*r1_perm'*r2_perm + C[1][2,2]*r2_perm'*r2_perm))
+    Phi2_perm = norm_consts[2]*exp(-(C[2][1,1]*r1_perm'*r1_perm + 2*C[2][1,2]*r1_perm'*r2_perm + C[2][2,2]*r2_perm'*r2_perm))
 
     wavefunction_ref = C_linear[1]*(Phi1-Phi1_perm) + C_linear[2]*(Phi2-Phi2_perm)
 
@@ -238,6 +240,7 @@ function test_wavefunction2()
     foldername = "HDplus_param_chopped"
     param = ECWaveFunction.WaveFuncParam(foldername)
     L = [[flattened[1] 0; flattened[2] flattened[3]] for flattened in param.L_flattened]
+    norm_consts = [(2^2 *(Lk[1,1]*Lk[2,2])^2 / (pi^2))^0.75 for Lk in L]
     A = [L[k]*L[k]' for k in 1:param.M]
     B = [[flattened[1] flattened[2]; flattened[2] flattened[3]] for flattened in param.B_flattened]
     C = [A[k] + B[k]*im for k in 1:param.M]
@@ -251,14 +254,17 @@ function test_wavefunction2()
     r1 = R2 - R1
     r2 = R3 - R1
 
-    Phi1 = exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
-    Phi2 = exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
+    Phi1 = norm_consts[1]*exp(-(C[1][1,1]*r1'*r1 + 2*C[1][1,2]*r1'*r2 + C[1][2,2]*r2'*r2))
+    Phi2 = norm_consts[2]*exp(-(C[2][1,1]*r1'*r1 + 2*C[2][1,2]*r1'*r2 + C[2][2,2]*r2'*r2))
 
     wavefunction_ref = param.C[1]*Phi1 + param.C[2]*Phi2
-    println(wavefunction_ref)
     r = [r1; r2]
-    println(r)
     return wavefunction_ref ≈ wavefunction(r)
+end
+
+function test_normconst()
+    L = [1.0 0; 2 3]
+    return ECWaveFunction.calc_norm_const(L) ≈ 2.6393808814892727
 end
 
 
@@ -281,5 +287,6 @@ end
     @test_broken test_globalphase()
     @test test_wavefunction()
     @test test_wavefunction2()
+    @test test_normconst()
 end
 
