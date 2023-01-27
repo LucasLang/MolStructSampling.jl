@@ -285,24 +285,59 @@ end
 
 """
 In this test, we numerically integrate overlap matrix elements between
-unnormalized explicitly correlated Gaussian functions for the HD+ molecule.
+normalized explicitly correlated Gaussian functions for the HD+ molecule.
+Note: With this test, I realized that the order of the basis functions 
+in the vector of linear expansion coefficients is inverted.
 """
 function test_overlap_numeric()
-    param_processed = ECWaveFunction.WaveFuncParamProcessed("HDplus_param")
+    function overlap(k,l, param)
+        Lk = flattened_to_lower(param.n, param.L_flattened[k])
+        norm_const_k = ECWaveFunction.calc_norm_const(Lk)
+        Ak = Lk*Lk'
+        Bk = flattened_to_symmetric(param.n, param.B_flattened[k])
+        Ck = Ak + Bk*im
 
-    C_matrices = [param_processed.A[k,1] + param_processed.B[k,1]*im for k in param_processed.M]
-    k = 1
-    l = 1
+        Ll = flattened_to_lower(param.n, param.L_flattened[l])
+        norm_const_l = ECWaveFunction.calc_norm_const(Ll)
+        Al = Ll*Ll'
+        Bl = flattened_to_symmetric(param.n, param.B_flattened[l])
+        Cl = Al + Bl*im
 
-    nperdim = 100   # number of intervals / evaluation points
+        nperdim = 100   # number of intervals / evaluation points
 
-    endr1 = 5.0
-    endr2 = 5.0
-    endtheta = pi
+        endr1 = 5.0
+        endr2 = 5.0
+        endtheta = pi
 
-    integral = ECWaveFunction.calc_overlap_3part(C_matrices[k], C_matrices[l], endr1, endr2, endtheta, nperdim)
-    println("Value of the integral: ", integral)
-    return false
+        return norm_const_k*norm_const_l*ECWaveFunction.calc_overlap_3part(Ck, Cl, endr1, endr2, endtheta, nperdim)
+    end
+
+    param = ECWaveFunction.WaveFuncParam("HDplus_param")
+
+    S_1_1 = overlap(1,1,param)
+    S_1_2 = overlap(1,2,param)
+    S_1_3 = overlap(1,3,param)
+    S_2_2 = overlap(2,2,param)
+    S_26_91 = overlap(26,91,param)
+    S_78_7 = overlap(78,7,param)
+
+    # The reference values are taken directly from the printout of the
+    # overlap matrix from Ludwik's code.
+    S_ref_100_100 = 1.0
+    S_ref_100_99 = 0.3163820471200495E+00+0.2419897935936788E+00im
+    S_ref_100_98 = 0.5399063654389534E+00+0.4915090099334491E+00im
+    S_ref_99_99 = 1.0
+    S_ref_75_10 = 0.1424213865627649E+00-0.5883614620792891E-01im
+    S_ref_23_94 = 0.6294967913042294E-01+0.3195691871030648E+00im
+
+    c1 = abs(S_1_1-S_ref_100_100)<0.001
+    c2 = abs(S_1_2-S_ref_100_99)<0.001
+    c3 = abs(S_1_3-S_ref_100_98)<0.001
+    c4 = abs(S_2_2-S_ref_99_99)<0.001
+    c5 = abs(S_26_91-S_ref_75_10)<0.001
+    c6 = abs(S_78_7-S_ref_23_94)<0.001
+
+    return c1 && c2 && c3 && c4 && c5 && c6
 end
 
 
@@ -327,5 +362,6 @@ end
     @test test_wavefunction2()
     @test test_normconst()
     @test test_numeric_integration()
+    @test test_overlap_numeric()
 end
 
