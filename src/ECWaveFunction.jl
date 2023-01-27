@@ -339,5 +339,33 @@ end
 
 calc_probability_density(r::Vector{Float64}, par::WaveFuncParamProcessed) = abs2(calc_wavefunction(r, par))
 
+"""
+Calculates the value of an unnormalized basis function for a 3-particle system
+(= 2-pseudoparticle system) like HD+.
+"""
+function calc_bf_3part(Ck::Matrix{T}, r1::Real, r2::Real, theta::Real) where T <: Number
+    return exp(-(Ck[1,1]*r1^2 + 2Ck[1,2]*r1*r2*cos(theta) + Ck[2,2]*r2^2))
+end
+
+"""
+    nperdim: number of intervals / evaluation points
+"""
+function calc_overlap_3part(Ck::Matrix{T}, Cl::Matrix{T}, endr1::Real, endr2::Real, endtheta::Real, nperdim::Integer) where T<:Number
+
+    function integrand(Ck::Matrix{T}, Cl::Matrix{T}, r1::Real, r2::Real, theta::Real) where T <: Number
+        return conj(calc_bf_3part(Ck, r1, r2, theta))*calc_bf_3part(Cl, r1, r2, theta)*r1^2*r2^2*sin(theta)
+    end
+
+    dr1 = endr1/(nperdim)
+    dr2 = endr2/(nperdim)
+    dtheta = endtheta/(nperdim)
+
+    gridr1 = [(i-0.5)*dr1 for i in 1:(nperdim)]
+    gridr2 = [(i-0.5)*dr2 for i in 1:(nperdim)]
+    gridtheta = [(i-0.5)*dtheta for i in 1:(nperdim)]
+
+    integrand_values = [integrand(Ck, Cl, r1, r2, theta) for r1 in gridr1, r2 in gridr2, theta in gridtheta]
+    return 8*pi^2 *sum(integrand_values)*dr1*dr2*dtheta
+end
 
 end

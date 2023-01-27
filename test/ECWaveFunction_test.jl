@@ -267,6 +267,44 @@ function test_normconst()
     return ECWaveFunction.calc_norm_const(L) ≈ 2.6393808814892727
 end
 
+"""
+In this test, we numerically integrate overlap matrix elements between
+unnormalized explicitly correlated Gaussian functions for the HD+ molecule.
+"""
+function test_numeric_integration()
+    C = [1 0; 0 1]
+
+    nperdim = 100   # number of intervals / evaluation points
+    endr = 4.0
+    endtheta = pi
+
+    integral = ECWaveFunction.calc_overlap_3part(C, C, endr, endr, endtheta, nperdim)
+    ref = (pi/2)^3
+    return abs(ref-integral) < 0.001
+end
+
+"""
+In this test, we numerically integrate overlap matrix elements between
+unnormalized explicitly correlated Gaussian functions for the HD+ molecule.
+"""
+function test_overlap_numeric()
+    param_processed = ECWaveFunction.WaveFuncParamProcessed("HDplus_param")
+
+    C_matrices = [param_processed.A[k,1] + param_processed.B[k,1]*im for k in param_processed.M]
+    k = 1
+    l = 1
+
+    nperdim = 100   # number of intervals / evaluation points
+
+    endr1 = 5.0
+    endr2 = 5.0
+    endtheta = pi
+
+    integral = ECWaveFunction.calc_overlap_3part(C_matrices[k], C_matrices[l], endr1, endr2, endtheta, nperdim)
+    println("Value of the integral: ", integral)
+    return false
+end
+
 
 
 
@@ -288,5 +326,6 @@ end
     @test test_wavefunction()
     @test test_wavefunction2()
     @test test_normconst()
+    @test test_numeric_integration()
 end
 
