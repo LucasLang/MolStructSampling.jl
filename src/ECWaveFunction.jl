@@ -4,7 +4,7 @@ using LinearAlgebra, DelimitedFiles
 
 import Base.length, Base.parse, Base.*, Base.==
 
-export WaveFuncParam, flattened_to_lower, flattened_to_symmetric
+export WaveFuncParam, flattened_to_lower, flattened_to_symmetric, calc_potential_energy
     
 include("Auxiliary.jl")
 
@@ -180,13 +180,32 @@ end
 Calculates the normalization constant for complex explicitly correlated Gaussian basis functions.
 Input L must be a lower triangular matrix.
 """
-function calc_norm_const(L::Matrix{Float64})
+function calc_norm_const(L::Matrix{T}) where T <: Real
     n = size(L)[1]
     detL = 1.0    # determinant of L
     for i in 1:n
         detL *= L[i,i]
     end
     return ((2/pi)^n * detL^2)^(3/4)
+end
+
+"""
+Calculates the normalization constant of the kth complex ECG basis function.
+"""
+function calc_norm_const(param::WaveFuncParam, k::Integer)
+    Lk = flattened_to_lower(param.n, param.L_flattened[k])
+    return ECWaveFunction.calc_norm_const(Lk)
+end
+
+"""
+Returns the matrix C of nonlinear parameters of the kth complex ECG basis function.
+"""
+function get_C_matrix(param::WaveFuncParam, k::Integer)
+    Lk = flattened_to_lower(param.n, param.L_flattened[k])
+    norm_const_k = ECWaveFunction.calc_norm_const(Lk)
+    Ak = Lk*Lk'
+    Bk = flattened_to_symmetric(param.n, param.B_flattened[k])
+    return Ak + Bk*im
 end
 
 
@@ -235,6 +254,30 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
 end
 
 WaveFuncParamProcessed(folder::String) = WaveFuncParamProcessed(WaveFuncParam(folder))
+
+"""
+Calculates the overlap between two unnormalized complex ECG basis functions
+characterized by nonlinear parameter matrices Ck and Cl.
+"""
+function calc_overlap_unnormalized(Ck::Matrix{T1}, Cl::Matrix{T2}) where {T1 <: Number, T2 <: Number}
+    n = size(Ck)[1]
+    Ckl = Ck' + Cl    # Since Ck is symmetric, adjoint means just complex conjugation
+    return ((pi^n)/det(Ckl))^(3/2)
+end
+
+"""
+Calculates the overlap between two normalized complex ECG basis functions
+characterized by nonlinear parameter matrices Ck and Cl.
+"""
+function calc_overlap_normalized(Ck::Matrix{T1}, Cl::Matrix{T2}) where {T1 <: Number, T2 <: Number}
+    Skl = calc_overlap_unnormalized(Ck, Cl)
+    Skk = calc_overlap_unnormalized(Ck, Ck)
+    Sll = calc_overlap_unnormalized(Cl, Cl)
+    return Skl/sqrt(Skk*Sll)
+end
+
+function calc_Ck(param::WaveFuncParam)
+end
 
 """
 Returns the transposition matrix acting on pseudoparticle coordinates.

@@ -300,17 +300,10 @@ in the vector of linear expansion coefficients is inverted.
 """
 function test_overlap_numeric()
     function overlap(k,l, param)
-        Lk = flattened_to_lower(param.n, param.L_flattened[k])
-        norm_const_k = ECWaveFunction.calc_norm_const(Lk)
-        Ak = Lk*Lk'
-        Bk = flattened_to_symmetric(param.n, param.B_flattened[k])
-        Ck = Ak + Bk*im
-
-        Ll = flattened_to_lower(param.n, param.L_flattened[l])
-        norm_const_l = ECWaveFunction.calc_norm_const(Ll)
-        Al = Ll*Ll'
-        Bl = flattened_to_symmetric(param.n, param.B_flattened[l])
-        Cl = Al + Bl*im
+        norm_const_k = ECWaveFunction.calc_norm_const(param, k)
+        Ck = ECWaveFunction.get_C_matrix(param, k)
+        norm_const_l = ECWaveFunction.calc_norm_const(param, l)
+        Cl = ECWaveFunction.get_C_matrix(param, l)
 
         nperdim = 100   # number of intervals / evaluation points
 
@@ -356,6 +349,28 @@ function test_potential_energy()
     return Epot ≈ (2-1-sqrt(2))
 end
 
+function test_overlap_unnormalized()
+    param = ECWaveFunction.WaveFuncParam("HDplus_param")
+    k = 13
+    norm_const_k = ECWaveFunction.calc_norm_const(param, k)
+    Ck = ECWaveFunction.get_C_matrix(param, k)
+    overlap_kk = ECWaveFunction.calc_overlap_unnormalized(Ck, Ck)
+
+    return (norm_const_k^2 * overlap_kk) ≈ 1.0
+end
+
+function test_overlap_unnormalized2()
+    Lk = [1 0; 2 3]
+    Ak = Lk*Lk'
+    Bk = [4 5; 5 6]
+    Ck = Ak + Bk*im
+    norm_const_k = ECWaveFunction.calc_norm_const(Lk)
+    overlap_kk = ECWaveFunction.calc_overlap_unnormalized(Ck, Ck)
+
+    return (norm_const_k^2 * overlap_kk) ≈ 1.0
+end
+
+
 
 
 
@@ -380,5 +395,7 @@ end
     @test test_numeric_integration()
     @test test_overlap_numeric()
     @test test_potential_energy()
+    @test test_overlap_unnormalized()
+    @test test_overlap_unnormalized2()
 end
 
