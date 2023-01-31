@@ -370,6 +370,14 @@ function test_overlap_unnormalized2()
     return (norm_const_k^2 * overlap_kk) ≈ 1.0
 end
 
+function test_wavefunction_value_HDplus()
+    param_processed = ECWaveFunction.WaveFuncParamProcessed("HDplus_param")
+    wf(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
+    println()
+
+    return wf([0.0, 0.0, 2.0, 0.0, 0.0, 2.0]) ≈ (0.07450263634420635 + 0.000122352872978414im)
+end
+
 
 
 
@@ -397,5 +405,6 @@ end
     @test test_potential_energy()
     @test test_overlap_unnormalized()
     @test test_overlap_unnormalized2()
+    @test test_wavefunction_value_HDplus()
 end
 
