@@ -378,6 +378,19 @@ function test_wavefunction_value_HDplus()
     return wf([0.0, 0.0, 2.0, 0.0, 0.0, 2.0]) ≈ (0.07450263634420635 + 0.000122352872978414im)
 end
 
+function test_wavefunction_value_D3plus()
+    param_processed = ECWaveFunction.WaveFuncParamProcessed("D3plus_param")
+    wf(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
+    dist_avg = 1.72   # from Cafiero, Adamowicz 2004
+    D2 = [0.0, 0.0, dist_avg]
+    D3 = [(sqrt(3)/2)*dist_avg, 0.0, 0.5*dist_avg]
+    e1 = 0.5 .* D2
+    e2 = 0.5 .* D3
+    r = [D2; D3; e1; e2]
+
+    return wf(r) ≈ (-0.013810604415407693 + 0.005248954597497664im)
+end
+
 function test_overlap_projectedbasis()
     param = ECWaveFunction.WaveFuncParam("D3plus_param")
     S = ECWaveFunction.calc_overlap_projectedbasis(param)
@@ -421,6 +434,7 @@ end
     @test test_overlap_unnormalized()
     @test test_overlap_unnormalized2()
     @test test_wavefunction_value_HDplus()
-    #@test test_overlap_projectedbasis()
+    #@test test_overlap_projectedbasis()          # this test takes too long to run
+    @test test_wavefunction_value_D3plus()
 end
 
