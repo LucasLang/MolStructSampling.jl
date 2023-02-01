@@ -208,6 +208,28 @@ function get_C_matrix(param::WaveFuncParam, k::Integer)
     return Ak + Bk*im
 end
 
+"""
+Calculate normalization constants such that the basis functions AFTER application of the
+Young operator are normalized to 1.
+"""
+function calc_norm_consts_afterproj(param::WaveFuncParam)
+    M = param.M
+    NY = length(param.Y)
+    P_matrices = [permutation_matrix_pseudo(param.n, p) for p in param.Y.permutations]
+    S_all = Vector{Matrix{ComplexF64}}(undef, M)   # overlap for all primitive Gaussians possibly including permutation
+    for k in 1:M
+        S_all[k] = Matrix{ComplexF64}(undef, NY, NY)
+        Ck = get_C_matrix(param, k)
+        for i in 1:NY, j in 1:NY
+            Cki = P_matrices[i]'*Ck*P_matrices[i]
+            Ckj = P_matrices[j]'*Ck*P_matrices[j]
+            S_all[k][i,j] = calc_overlap_unnormalized(Cki, Ckj)
+        end
+    end
+    Y_coeffs = param.Y.coeffs
+    S_diag = [Y_coeffs'*S_all[k]*Y_coeffs for k in 1:M]
+    return 1 ./ sqrt.(S_diag)
+end
 
 """
     n: Number of quasiparticles (= one less than the number of actual particles)
@@ -236,11 +258,10 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
     id3 = Matrix{Float64}(I, 3, 3)      # 3x3 identity matrix
     A = Matrix{Matrix{Float64}}(undef, M, length(Y))
     B = Matrix{Matrix{Float64}}(undef, M, length(Y))
-    coeffs_normalized = reverse(deepcopy(param.C))   # the order of basis functions in Ludwik's code is reversed!
+    norm_consts = calc_norm_consts_afterproj(param)
+    coeffs_normalized = reverse(deepcopy(param.C)) .* norm_consts   # the order of basis functions in Ludwik's code is reversed!
     for k in 1:M
         L = flattened_to_lower(n, param.L_flattened[k])
-        norm_const = calc_norm_const(L)
-        coeffs_normalized[k] *= norm_const
         Ak = L*L'
         Bk = flattened_to_symmetric(n, param.B_flattened[k])
         for i in 1:length(Y)
@@ -433,5 +454,29 @@ function calc_potential_energy(r::Vector{T1}, charges::Vector{T2}) where {T1 <: 
     end
     return E_pot
 end
+
+"""
+Calculates the overlap matrix in the basis of functions after projection with the Young operator.
+"""
+function calc_overlap_projectedbasis(param::WaveFuncParam)
+    M = param.M
+    NY = length(param.Y)
+    P_matrices = [permutation_matrix_pseudo(param.n, p) for p in param.Y.permutations]
+    S_all = Matrix{Matrix{ComplexF64}}(undef, M, M)   # overlap for all primitive Gaussians possibly including permutation
+    for k in 1:M, l in 1:M
+        S_all[k,l] = Matrix{ComplexF64}(undef, NY, NY)
+        Ck = get_C_matrix(param, k)
+        Cl = get_C_matrix(param, l)
+        for i in 1:NY, j in 1:NY
+            Cki = P_matrices[i]'*Ck*P_matrices[i]
+            Clj = P_matrices[j]'*Cl*P_matrices[j]
+            S_all[k,l][i,j] = calc_overlap_unnormalized(Cki, Clj)
+        end
+    end
+    Y_coeffs = param.Y.coeffs
+    return [Y_coeffs'*S_all[k,l]*Y_coeffs for k in 1:M, l in 1:M]
+end
+
+
 
 end

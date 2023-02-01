@@ -67,13 +67,14 @@ function test_WaveFuncParamProcessed()
     C = [10.0, 11.0]
     L_flattened = [[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
                    [7.0, 8.0, 9.0, 10.0, 11.0, 12.0]]
-    norm_consts = [(2^3 *(flattened[1]*flattened[4]*flattened[6])^2 / (pi^3))^0.75 for flattened in L_flattened]
     B_flattened = [[13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
                    [19.0, 20.0, 21.0, 22.0, 23.0, 24.0]]
     transpositions_tuples = [[], [(1, 3), (3, 4)]]
     transpositions = [[ECWaveFunction.Transposition(tuple) for tuple in p] for p in transpositions_tuples]
     Y = ECWaveFunction.YoungOperator([1.0, -1.0], [ECWaveFunction.PseudoParticlePermutation(p) for p in transpositions])
     param = WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
+    norm_consts = ECWaveFunction.calc_norm_consts_afterproj(param)
+
     param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
 
     ref_A21 = [49.0   0.0   0.0   56.0    0.0    0.0   63.0    0.0    0.0;
@@ -214,11 +215,12 @@ function test_wavefunction()
     L_flattened = [rand(3) for k in 1:M]
     B_flattened = [rand(3) for k in 1:M]
     L = [[flattened[1] 0; flattened[2] flattened[3]] for flattened in L_flattened]
-    norm_consts = [(2^2 *(Lk[1,1]*Lk[2,2])^2 / (pi^2))^0.75 for Lk in L]
+
     A = [L[k]*L[k]' for k in 1:M]
     B = [[flattened[1] flattened[2]; flattened[2] flattened[3]] for flattened in B_flattened]
     C = [A[k] + B[k]*im for k in 1:M]
     param = ECWaveFunction.WaveFuncParam(n, masses, charges, M, C_linear, L_flattened, B_flattened, Y)
+    norm_consts = ECWaveFunction.calc_norm_consts_afterproj(param)
     param_processed = ECWaveFunction.WaveFuncParamProcessed(param)
     wavefunction(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
 
@@ -373,9 +375,22 @@ end
 function test_wavefunction_value_HDplus()
     param_processed = ECWaveFunction.WaveFuncParamProcessed("HDplus_param")
     wf(r) = ECWaveFunction.calc_wavefunction(r, param_processed)
-    println()
-
     return wf([0.0, 0.0, 2.0, 0.0, 0.0, 2.0]) ≈ (0.07450263634420635 + 0.000122352872978414im)
+end
+
+function test_overlap_projectedbasis()
+    param = ECWaveFunction.WaveFuncParam("D3plus_param")
+    S = ECWaveFunction.calc_overlap_projectedbasis(param)
+    println(S[1:10, 1:10])
+    S_diag = deepcopy([S[k,k] for k in 1:param.M])
+    for row in 1:param.M
+        S[row,:] = S[row,:] .* (1/sqrt(S_diag[row]))
+    end
+    for col in 1:param.M
+        S[:,col] = S[:,col] .* (1/sqrt(S_diag[col]))
+    end
+
+    return false
 end
 
 
@@ -406,5 +421,6 @@ end
     @test test_overlap_unnormalized()
     @test test_overlap_unnormalized2()
     @test test_wavefunction_value_HDplus()
+    #@test test_overlap_projectedbasis()
 end
 
