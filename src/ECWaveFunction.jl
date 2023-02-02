@@ -456,7 +456,8 @@ function calc_potential_energy(r::Vector{T1}, charges::Vector{T2}) where {T1 <: 
 end
 
 """
-Calculates the overlap matrix in the basis of functions after projection with the Young operator.
+Calculates the overlap matrix in the basis of functions after projection with the Young operator,
+but BEFORE normalization.
 """
 function calc_overlap_projectedbasis(param::WaveFuncParam, range::AbstractRange{T}) where T <: Integer
     M = param.M
