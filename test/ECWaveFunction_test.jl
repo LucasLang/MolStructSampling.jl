@@ -393,17 +393,27 @@ end
 
 function test_overlap_projectedbasis()
     param = ECWaveFunction.WaveFuncParam("D3plus_param")
-    S = ECWaveFunction.calc_overlap_projectedbasis(param)
-    println(S[1:10, 1:10])
-    S_diag = deepcopy([S[k,k] for k in 1:param.M])
-    for row in 1:param.M
+    range = 1:3
+    S = ECWaveFunction.calc_overlap_projectedbasis(param, range)
+    S_diag = deepcopy([S[k,k] for k in range])
+    for row in range
         S[row,:] = S[row,:] .* (1/sqrt(S_diag[row]))
     end
-    for col in 1:param.M
+    for col in range
         S[:,col] = S[:,col] .* (1/sqrt(S_diag[col]))
     end
 
-    return false
+    # The following reference values are taken from printout of Ludwik's ocelote program
+    S_ref_400_400 = 1.0
+    S_ref_400_399 = 0.4577414205458266E+00 + 0.2416728474507377E+00im
+    S_ref_400_398 = 0.6302649360537530E+00 + 0.1051586761589563E+00im
+    S_ref_399_398 = 0.5168911579105498E+00 - 0.1050316899371985E+00im
+
+    c1 = (S_ref_400_400 ≈ S[1,1])
+    c2 = (S_ref_400_399 ≈ S[1,2])
+    c3 = (S_ref_400_398 ≈ S[1,3])
+    c4 = (S_ref_399_398 ≈ S[2,3])
+    return c1 && c2 && c3 && c4
 end
 
 
@@ -434,7 +444,7 @@ end
     @test test_overlap_unnormalized()
     @test test_overlap_unnormalized2()
     @test test_wavefunction_value_HDplus()
-    #@test test_overlap_projectedbasis()          # this test takes too long to run
+    @test test_overlap_projectedbasis()
     @test test_wavefunction_value_D3plus()
 end
 

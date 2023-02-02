@@ -458,12 +458,12 @@ end
 """
 Calculates the overlap matrix in the basis of functions after projection with the Young operator.
 """
-function calc_overlap_projectedbasis(param::WaveFuncParam)
+function calc_overlap_projectedbasis(param::WaveFuncParam, range::AbstractRange{T}) where T <: Integer
     M = param.M
     NY = length(param.Y)
     P_matrices = [permutation_matrix_pseudo(param.n, p) for p in param.Y.permutations]
     S_all = Matrix{Matrix{ComplexF64}}(undef, M, M)   # overlap for all primitive Gaussians possibly including permutation
-    for k in 1:M, l in 1:M
+    for k in range, l in range
         S_all[k,l] = Matrix{ComplexF64}(undef, NY, NY)
         Ck = get_C_matrix(param, k)
         Cl = get_C_matrix(param, l)
@@ -474,7 +474,7 @@ function calc_overlap_projectedbasis(param::WaveFuncParam)
         end
     end
     Y_coeffs = param.Y.coeffs
-    return [Y_coeffs'*S_all[k,l]*Y_coeffs for k in 1:M, l in 1:M]
+    return [Y_coeffs'*S_all[k,l]*Y_coeffs for k in range, l in range]
 end
 
 
