@@ -52,6 +52,12 @@ function test_transform_newbasis()
     return Analysis.transform_newbasis(r, B) ≈ r_newbasis_ref
 end
 
+function test_calc_centroid()
+    P = [1 2 3; 4 5 6; 7 8 9; 10 11 12]
+    centroid_ref = [5.5, 6.5, 7.5]
+    return calc_centroid(P) ≈ centroid_ref
+end
+
 
 @testset "Module Analysis" begin
     @test partial_means_test()
@@ -60,4 +66,5 @@ end
     @test test_shift2neworig()
     @test test_determine_basis_inplane_3particle()
     @test test_transform_newbasis()
+    @test test_calc_centroid()
 end

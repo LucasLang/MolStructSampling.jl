@@ -3,7 +3,7 @@ module Analysis
 using LinearAlgebra
 
 export calc_partial_means, coordinates_single2multiple_vectors, calc_nuclear_COM, shift2neworig
-export determine_basis_inplane_3particle, transform_newbasis, project_coords_nuclearplane_3particle
+export determine_basis_inplane_3particle, transform_newbasis, project_coords_nuclearplane_3particle, calc_centroid
 
 function calc_partial_means(vec::Vector{T}) where T<:Real
     N = length(vec)
@@ -105,6 +105,21 @@ function project_coords_nuclearplane_3particle(r::Vector{T1}, masses::Vector{T2}
     individualvectors_COM = shift2neworig(individualvectors, nuclear_COM)
     B = determine_basis_inplane_3particle(individualvectors_COM[1:Nnuc])
     return transform_newbasis(individualvectors_COM, B)
+end
+
+"""
+Returns the centroid of a set of points
+
+P is a Nx3 matrix whose rows are points in Euclidean space.
+"""
+function calc_centroid(P::Matrix{T}) where T <: Real
+    N = size(P)[1]
+    centroid = sum(P, dims=1)/N
+    return [centroid[1, i] for i in 1:3]
+end
+
+function optimal_rotation_Kabsch(P::Matrix{T1}, Q::Matrix{T2}) where {T1 <: Real, T2 <: Real}
+
 end
 
 end
