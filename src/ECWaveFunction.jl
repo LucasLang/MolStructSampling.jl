@@ -171,8 +171,8 @@ function WaveFuncParam(folder::String)
 
     gauss_param_array = readdlm("$folder/gauss_param")
     dim_flattened = n*(n+1)÷2
-    L_flattened = [[parse(Float64, replace(gauss_param_array[bf, 1+i], "D"=>"E")) for i in 1:dim_flattened] for bf in 1:M]
-    B_flattened = [[parse(Float64, replace(gauss_param_array[bf, 1+dim_flattened+i], "D"=>"E")) for i in 1:dim_flattened] for bf in 1:M]
+    L_flattened = [[gauss_param_array[bf, 1+i] for i in 1:dim_flattened] for bf in 1:M]
+    B_flattened = [[gauss_param_array[bf, 1+dim_flattened+i] for i in 1:dim_flattened] for bf in 1:M]
     return WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
 end
 
@@ -343,7 +343,7 @@ function permutation_matrix_pseudo(n::Integer, p::PseudoParticlePermutation)
     transposition_matrices = [transposition_matrix_pseudo(n, t) for t in p.transpositions]
     matrix_product = Matrix{Float64}(I, n, n)   # if there are no transpositions: return identity
     for matrix in transposition_matrices
-        matrix_product = matrix_product*matrix
+        matrix_product = matrix*matrix_product   # the order of transpositions in product of operators and product of matrices is opposite!
     end
     return matrix_product
 end
@@ -463,6 +463,7 @@ function calc_overlap_projectedbasis(param::WaveFuncParam, range::AbstractRange{
     M = param.M
     NY = length(param.Y)
     P_matrices = [permutation_matrix_pseudo(param.n, p) for p in param.Y.permutations]
+
     S_all = Matrix{Matrix{ComplexF64}}(undef, M, M)   # overlap for all primitive Gaussians possibly including permutation
     for k in range, l in range
         S_all[k,l] = Matrix{ComplexF64}(undef, NY, NY)
@@ -471,7 +472,7 @@ function calc_overlap_projectedbasis(param::WaveFuncParam, range::AbstractRange{
         for i in 1:NY, j in 1:NY
             Cki = P_matrices[i]'*Ck*P_matrices[i]
             Clj = P_matrices[j]'*Cl*P_matrices[j]
-            S_all[k,l][i,j] = calc_overlap_unnormalized(Cki, Clj)
+            S_all[k,l][i,j] = calc_overlap_normalized(Cki, Clj)
         end
     end
     Y_coeffs = param.Y.coeffs

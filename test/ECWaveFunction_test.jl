@@ -69,7 +69,7 @@ function test_WaveFuncParamProcessed()
                    [7.0, 8.0, 9.0, 10.0, 11.0, 12.0]]
     B_flattened = [[13.0, 14.0, 15.0, 16.0, 17.0, 18.0],
                    [19.0, 20.0, 21.0, 22.0, 23.0, 24.0]]
-    transpositions_tuples = [[], [(1, 3), (3, 4)]]
+    transpositions_tuples = [[], [(3, 4), (1, 3)]]
     transpositions = [[ECWaveFunction.Transposition(tuple) for tuple in p] for p in transpositions_tuples]
     Y = ECWaveFunction.YoungOperator([1.0, -1.0], [ECWaveFunction.PseudoParticlePermutation(p) for p in transpositions])
     param = WaveFuncParam(n, masses, charges, M, C, L_flattened, B_flattened, Y)
@@ -416,6 +416,118 @@ function test_overlap_projectedbasis()
     return c1 && c2 && c3 && c4
 end
 
+function test_overlap_projectedbasis_D3()
+    param = ECWaveFunction.WaveFuncParam("D3_param")
+    range = 1:4
+    S = ECWaveFunction.calc_overlap_projectedbasis(param, range)
+
+    S_diag = deepcopy([S[k,k] for k in range])
+    for row in range
+        S[row,:] = S[row,:] .* (1/sqrt(S_diag[row]))
+    end
+    for col in range
+        S[:,col] = S[:,col] .* (1/sqrt(S_diag[col]))
+    end
+
+    # The following reference values are taken from printout of Ludwik's ocelote program
+    S_ref_1_1 = 0.1000000000000000E+01 
+    S_ref_1_2 = 0.1713070445612793E+00 - 0.2927552733774612E-01im
+    S_ref_1_3 = 0.1567207141859616E+00 + 0.9823447722497833E-01im
+    S_ref_1_4 = 0.1390492527836689E+00 + 0.1412139469393235E+00im
+    S_ref_2_3 = 0.3777187525106950E+00 + 0.2282214119639189E+00im
+    S_ref_2_4 = 0.1272939621672173E+00 + 0.1659339179551543E+00im
+    S_ref_3_4 = 0.4084984377243480E+00 + 0.2376335293952030E+00im
+
+    c1 = (S_ref_1_1 ≈ S[1,1])
+    c2 = (S_ref_1_2 ≈ S[1,2])
+    c3 = (S_ref_1_3 ≈ S[1,3])
+    c4 = (S_ref_1_4 ≈ S[1,4])
+    c5 = (S_ref_2_3 ≈ S[2,3])
+    c6 = (S_ref_2_4 ≈ S[2,4])
+    c7 = (S_ref_3_4 ≈ S[3,4])
+
+    return c1 && c2 && c3 && c4 && c5 && c6 && c7
+end
+
+function test_D3_overlapcontribution()
+    param = ECWaveFunction.WaveFuncParam("D3_param")
+    k = 1
+
+    L = ECWaveFunction.flattened_to_lower(param.n, param.L_flattened[k])
+    A = L*L'
+    B = ECWaveFunction.flattened_to_symmetric(param.n, param.B_flattened[k])
+    C = A+B*im
+
+    P = [1    0    0    0    0;
+    0    1    0    0    0;
+    0    0    0    1    0;
+    0    0    1    0    0;
+    0    0    0    0    1]
+
+    ref_value = 0.5008780577377846E+00 -0.2215755867623245E-17im   # value printed within ocelote
+    return ECWaveFunction.calc_overlap_normalized(C, P'*C*P) ≈ ref_value
+end
+
+function test_permutation_matrices()
+    param = ECWaveFunction.WaveFuncParam("D3_param")
+    P_matrices = [ECWaveFunction.permutation_matrix_pseudo(param.n, p) for p in param.Y.permutations]
+    Id = [1.0  0.0  0.0  0.0  0.0;
+          0.0  1.0  0.0  0.0  0.0;
+          0.0  0.0  1.0  0.0  0.0;
+          0.0  0.0  0.0  1.0  0.0;
+          0.0  0.0  0.0  0.0  1.0]
+    P12 = [-1.0  0.0  0.0  0.0  0.0;
+           -1.0  1.0  0.0  0.0  0.0;
+           -1.0  0.0  1.0  0.0  0.0;
+           -1.0  0.0  0.0  1.0  0.0;
+           -1.0  0.0  0.0  0.0  1.0]
+    P13 = [1.0  -1.0  0.0  0.0  0.0;
+           0.0  -1.0  0.0  0.0  0.0;
+           0.0  -1.0  1.0  0.0  0.0;
+           0.0  -1.0  0.0  1.0  0.0;
+           0.0  -1.0  0.0  0.0  1.0]
+    P23 = [0.0  1.0  0.0  0.0  0.0;
+           1.0  0.0  0.0  0.0  0.0;
+           0.0  0.0  1.0  0.0  0.0;
+           0.0  0.0  0.0  1.0  0.0;
+           0.0  0.0  0.0  0.0  1.0]
+    P46 = [1.0  0.0  0.0  0.0  0.0;
+           0.0  1.0  0.0  0.0  0.0;
+           0.0  0.0  0.0  0.0  1.0;
+           0.0  0.0  0.0  1.0  0.0;
+           0.0  0.0  1.0  0.0  0.0]
+    P45 = [1.0  0.0  0.0  0.0  0.0;
+           0.0  1.0  0.0  0.0  0.0;
+           0.0  0.0  0.0  1.0  0.0;
+           0.0  0.0  1.0  0.0  0.0;
+           0.0  0.0  0.0  0.0  1.0]
+    
+    c1 = P_matrices[1]   ≈ Id
+    c2 = P_matrices[2]   ≈ P12
+    c3 = P_matrices[3]   ≈ P13
+    c4 = P_matrices[4]   ≈ P13*P12
+    c5 = P_matrices[5]   ≈ P23
+    c6 = P_matrices[6]   ≈ P23*P12
+    c7 = P_matrices[7]   ≈ P46
+    c8 = P_matrices[8]   ≈ P46*P12
+    c9 = P_matrices[9]   ≈ P46*P13
+    c10 = P_matrices[10] ≈ P46*P13*P12
+    c11 = P_matrices[11] ≈ P46*P23
+    c12 = P_matrices[12] ≈ P46*P23*P12
+    c13 = P_matrices[13] ≈ P45
+    c14 = P_matrices[14] ≈ P45*P12
+    c15 = P_matrices[15] ≈ P45*P13
+    c16 = P_matrices[16] ≈ P45*P13*P12
+    c17 = P_matrices[17] ≈ P45*P23
+    c18 = P_matrices[18] ≈ P45*P23*P12
+    c19 = P_matrices[19] ≈ P45*P46
+    c20 = P_matrices[20] ≈ P45*P46*P12
+    c21 = P_matrices[21] ≈ P45*P46*P13
+    c22 = P_matrices[22] ≈ P45*P46*P13*P12
+    c23 = P_matrices[23] ≈ P45*P46*P23
+    c24 = P_matrices[24] ≈ P45*P46*P23*P12
+    return c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9 && c10 && c11 && c12 && c13 && c14 && c15 && c16 && c17 && c18 && c19 && c20 && c21 && c22 && c23 && c24
+end
 
 
 
@@ -446,5 +558,8 @@ end
     @test test_wavefunction_value_HDplus()
     @test test_overlap_projectedbasis()
     @test test_wavefunction_value_D3plus()
+    @test test_overlap_projectedbasis_D3()
+    @test test_D3_overlapcontribution()
+    @test test_permutation_matrices()
 end
 
