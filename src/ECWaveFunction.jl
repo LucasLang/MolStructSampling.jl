@@ -306,7 +306,11 @@ Returns the transposition matrix acting on pseudoparticle coordinates.
 function transposition_matrix_pseudo(n::Integer, transposition::Transposition)
     i, j = get_indices(transposition)    # i is smaller than j
     if i==1
-        return transposition_matrix_pseudo_ref(n, j)
+        if j==1
+            return Matrix{Float64}(I, n, n)
+        else
+            return transposition_matrix_pseudo_ref(n, j)
+        end
     else
         return transposition_matrix_pseudo_other(n, transposition)
     end
