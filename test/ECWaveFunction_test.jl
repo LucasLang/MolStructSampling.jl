@@ -104,7 +104,7 @@ function test_WaveFuncParamProcessed()
                -42.0   -0.0   -0.0  -50.0   -0.0   -0.0  139.0    0.0    0.0;
                 -0.0  -42.0   -0.0   -0.0  -50.0   -0.0    0.0  139.0    0.0;
                 -0.0   -0.0  -42.0   -0.0   -0.0  -50.0    0.0    0.0  139.0]
-    c1 = param_processed.C ≈ norm_consts .* reverse(param.C)
+    c1 = param_processed.C ≈ norm_consts .* param.C
     c2 = param_processed.p_coeffs ≈ param.Y.coeffs
     c3 = param_processed.A[2, 1] ≈ ref_A21
     c4 = param_processed.A[2, 2] ≈ ref_A22
@@ -161,8 +161,8 @@ function test_readWF()
     c_charges = param.charges ≈ [1.0, 1.0, 1.0, -1.0, -1.0]
     c_M = param.M == 400
     c_C = (param.C[11] ≈ 0.124456114642243+9.240646041392420E-002im) && (param.C[42] ≈ 0.328701772837231-0.426789750897380im)
-    c_L = param.L_flattened[5][2] ≈ -0.5625016825356735E+00
-    c_B = param.B_flattened[42][5] ≈ 0.9006031655758847E+00
+    c_L = param.L_flattened[5][2] ≈ -0.2009259946516603E+00
+    c_B = param.B_flattened[42][5] ≈ -0.2059324200753563E+00
     c_Y = param.Y == parse(ECWaveFunction.YoungOperator, "(1+P12)(1+P13+P23)(1+P45)")
     return c_n && c_masses && c_charges && c_M && c_C && c_L && c_B && c_Y
 end
@@ -241,7 +241,7 @@ function test_wavefunction()
     Phi1_perm = norm_consts[1]*exp(-(C[1][1,1]*r1_perm'*r1_perm + 2*C[1][1,2]*r1_perm'*r2_perm + C[1][2,2]*r2_perm'*r2_perm))
     Phi2_perm = norm_consts[2]*exp(-(C[2][1,1]*r1_perm'*r1_perm + 2*C[2][1,2]*r1_perm'*r2_perm + C[2][2,2]*r2_perm'*r2_perm))
 
-    wavefunction_ref = C_linear[2]*(Phi1-Phi1_perm) + C_linear[1]*(Phi2-Phi2_perm) # need to reverse coeffs
+    wavefunction_ref = C_linear[1]*(Phi1-Phi1_perm) + C_linear[2]*(Phi2-Phi2_perm)
 
     r = [r1; r2]
     return wavefunction_ref ≈ wavefunction(r)
@@ -327,19 +327,19 @@ function test_overlap_numeric()
 
     # The reference values are taken directly from the printout of the
     # overlap matrix from Ludwik's code.
-    S_ref_100_100 = 1.0
-    S_ref_100_99 = 0.3163820471200495E+00+0.2419897935936788E+00im
-    S_ref_100_98 = 0.5399063654389534E+00+0.4915090099334491E+00im
-    S_ref_99_99 = 1.0
-    S_ref_75_10 = 0.1424213865627649E+00-0.5883614620792891E-01im
-    S_ref_23_94 = 0.6294967913042294E-01+0.3195691871030648E+00im
+    S_ref_1_1 = 0.1000000000000000E+01 
+    S_ref_1_2 = -0.1671667245349336E-03 -0.1296978079959740E+00im
+    S_ref_1_3 = -0.1644834988085512E-01 -0.5964543743141933E-01im
+    S_ref_2_2 = 0.1000000000000000E+01 
+    S_ref_26_91 = 0.5504153118944703E-02 -0.1057583150521015E+00im
+    S_ref_78_7 =0.1503629803375769E+00 +0.1744409121917275E+00im
 
-    c1 = abs(S_1_1-S_ref_100_100)<0.001
-    c2 = abs(S_1_2-S_ref_100_99)<0.001
-    c3 = abs(S_1_3-S_ref_100_98)<0.001
-    c4 = abs(S_2_2-S_ref_99_99)<0.001
-    c5 = abs(S_26_91-S_ref_75_10)<0.001
-    c6 = abs(S_78_7-S_ref_23_94)<0.001
+    c1 = abs(S_1_1-S_ref_1_1)<0.001
+    c2 = abs(S_1_2-S_ref_1_2)<0.001
+    c3 = abs(S_1_3-S_ref_1_3)<0.001
+    c4 = abs(S_2_2-S_ref_2_2)<0.001
+    c5 = abs(S_26_91-S_ref_26_91)<0.001
+    c6 = abs(S_78_7-S_ref_78_7)<0.001
 
     return c1 && c2 && c3 && c4 && c5 && c6
 end
@@ -404,15 +404,15 @@ function test_overlap_projectedbasis()
     end
 
     # The following reference values are taken from printout of Ludwik's ocelote program
-    S_ref_400_400 = 1.0
-    S_ref_400_399 = 0.4577414205458266E+00 + 0.2416728474507377E+00im
-    S_ref_400_398 = 0.6302649360537530E+00 + 0.1051586761589563E+00im
-    S_ref_399_398 = 0.5168911579105498E+00 - 0.1050316899371985E+00im
+    S_ref_1_1 = 0.1000000000000000E+01 
+    S_ref_1_2 = -0.6792524461245966E-01 +0.1842111495950207E+00im
+    S_ref_1_3 = 0.2256232118917643E+00 +0.1324910273402387E+00im
+    S_ref_2_3 =0.9460973793085009E-03 -0.9594352950993022E-01im
 
-    c1 = (S_ref_400_400 ≈ S[1,1])
-    c2 = (S_ref_400_399 ≈ S[1,2])
-    c3 = (S_ref_400_398 ≈ S[1,3])
-    c4 = (S_ref_399_398 ≈ S[2,3])
+    c1 = (S_ref_1_1 ≈ S[1,1])
+    c2 = (S_ref_1_2 ≈ S[1,2])
+    c3 = (S_ref_1_3 ≈ S[1,3])
+    c4 = (S_ref_2_3 ≈ S[2,3])
     return c1 && c2 && c3 && c4
 end
 

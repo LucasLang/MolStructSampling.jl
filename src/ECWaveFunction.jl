@@ -259,7 +259,7 @@ function WaveFuncParamProcessed(param::WaveFuncParam)
     A = Matrix{Matrix{Float64}}(undef, M, length(Y))
     B = Matrix{Matrix{Float64}}(undef, M, length(Y))
     norm_consts = calc_norm_consts_afterproj(param)
-    coeffs_normalized = reverse(deepcopy(param.C)) .* norm_consts   # the order of basis functions in Ludwik's code is reversed!
+    coeffs_normalized = param.C .* norm_consts
     for k in 1:M
         L = flattened_to_lower(n, param.L_flattened[k])
         Ak = L*L'
