@@ -15,6 +15,7 @@ include("Auxiliary.jl")
 """
 function MCrun(prob_dens::Function, n::Integer, nsteps::Integer, r_start::Vector{Float64}, widths::Vector{Float64})
     saved_r = Array{Float64}(undef, 3n, nsteps)
+    saved_P = Vector{Float64}(undef, nsteps)
     accepted_rejected = zeros(Int64, n, 2)    # First col: number of accepted, sec col: number of rejected
     r_current = r_start
     P_current = prob_dens(r_current)
@@ -30,8 +31,9 @@ function MCrun(prob_dens::Function, n::Integer, nsteps::Integer, r_start::Vector
             accepted_rejected[pp_index, 2] += 1
         end
         saved_r[:, step] = r_current
+        saved_P[step] = P_current
     end
-    return saved_r, accepted_rejected
+    return saved_r, saved_P, accepted_rejected
 end
 
 """

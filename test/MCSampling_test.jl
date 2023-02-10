@@ -26,7 +26,7 @@ function MCrun_test()
     r_start = [1.0, 0.0, 0.0]
     widths = [0.3]
     nsteps = 1000000
-    samples, accepted_rejected = MCrun(prob_dens, n, nsteps, r_start, widths)
+    samples, rho_values, accepted_rejected = MCrun(prob_dens, n, nsteps, r_start, widths)
     r_values = [sqrt(samples[:,i]'*samples[:,i]) for i in 1:nsteps]
     r_mean = mean(r_values)
     return (r_mean>0.75) && (r_mean<0.85)
@@ -48,7 +48,7 @@ function accepted_rejected_test()
     r_start = [1.0, 0.0, 0.0]
     widths = [0.3]
     nsteps = 10000
-    samples, accepted_rejected = MCrun(prob_dens, n, nsteps, r_start, widths)
+    samples, rho_values, accepted_rejected = MCrun(prob_dens, n, nsteps, r_start, widths)
     return sum(accepted_rejected) == nsteps
 end
 
