@@ -66,6 +66,14 @@ function test_optimal_rotation()
     return R_opt ≈ R'     # R_opt should undo the rotation R, i.e., be its inverse = transpose
 end
 
+function test_Rnuc_COMframe()
+    masses = [1,2,3,4,5]
+    r_pseudoparticle = [1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 4.0, 3.0, 2.0, 1.0, 0.0, -1.0]
+    Nnuc = 3
+    R_nuc_ref = [[-4/3, -2/3, 0], [1-4/3, 2-2/3, 3], [-1-4/3, -2-2/3, -3]]
+    return R_nuc_ref ≈ Rnuc_COMframe(r_pseudoparticle, masses, Nnuc)
+end
+
 
 @testset "Module Analysis" begin
     @test partial_means_test()
@@ -76,4 +84,5 @@ end
     @test test_transform_newbasis()
     @test test_calc_centroid()
     @test test_optimal_rotation()
+    @test test_Rnuc_COMframe()
 end

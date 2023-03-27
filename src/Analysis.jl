@@ -4,7 +4,7 @@ using LinearAlgebra
 
 export calc_partial_means, coordinates_single2multiple_vectors, calc_nuclear_COM, shift2neworig
 export determine_basis_inplane_3particle, transform_newbasis, project_coords_nuclearplane_3particle, calc_centroid
-export optimal_rotation
+export optimal_rotation, Rnuc_COMframe
 
 function calc_partial_means(vec::Vector{T}) where T<:Real
     N = length(vec)
@@ -122,6 +122,8 @@ end
 """
 Returns a rotation matrix that minimizes the RMSD between two sets of points.
 Uses an SVD-based algorithm published by Markley (1988).
+P and Q are Nx3 matrices, i.e., rows correspond to different points, and columns
+correspond to x,y,z of a given point.
 """
 function optimal_rotation(P::Matrix{T1}, Q::Matrix{T2}) where {T1 <: Real, T2 <: Real}
     H = P'*Q
@@ -130,6 +132,22 @@ function optimal_rotation(P::Matrix{T1}, Q::Matrix{T2}) where {T1 <: Real, T2 <:
     VT = decomp.Vt
     d = det(U)*det(VT)
     return U*Diagonal([1,1,d])*VT
+end
+
+"""
+Takes a pseudoparticle coordinate vector and returns particle coordinates for all nuclei (no electrons)
+in the all-particle COM frame.
+"""
+function Rnuc_COMframe(r::Vector{T1}, masses::Vector{T2}, Nnuc::Integer) where {T1 <: Real, T2 <: Real}
+    r_separate = coordinates_single2multiple_vectors(r)
+    Mtot = sum(masses)
+    constshift = (1/Mtot)*sum(masses .* r_separate)
+    R_nuc_COM = Vector{Vector{Float64}}(undef, Nnuc)
+    R_nuc_COM[1] = - constshift
+    for i in 2:Nnuc
+        R_nuc_COM[i] = r_separate[i] - constshift
+    end
+    return R_nuc_COM
 end
 
 end
