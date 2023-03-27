@@ -4,6 +4,7 @@ using LinearAlgebra
 
 export calc_partial_means, coordinates_single2multiple_vectors, calc_nuclear_COM, shift2neworig
 export determine_basis_inplane_3particle, transform_newbasis, project_coords_nuclearplane_3particle, calc_centroid
+export optimal_rotation
 
 function calc_partial_means(vec::Vector{T}) where T<:Real
     N = length(vec)
@@ -118,8 +119,17 @@ function calc_centroid(P::Matrix{T}) where T <: Real
     return [centroid[1, i] for i in 1:3]
 end
 
-function optimal_rotation_Kabsch(P::Matrix{T1}, Q::Matrix{T2}) where {T1 <: Real, T2 <: Real}
-
+"""
+Returns a rotation matrix that minimizes the RMSD between two sets of points.
+Uses an SVD-based algorithm published by Markley (1988).
+"""
+function optimal_rotation(P::Matrix{T1}, Q::Matrix{T2}) where {T1 <: Real, T2 <: Real}
+    H = P'*Q
+    decomp = svd(H)
+    U = decomp.U
+    VT = decomp.Vt
+    d = det(U)*det(VT)
+    return U*Diagonal([1,1,d])*VT
 end
 
 end

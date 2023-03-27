@@ -58,6 +58,14 @@ function test_calc_centroid()
     return calc_centroid(P) ≈ centroid_ref
 end
 
+function test_optimal_rotation()
+    R = [-0.21483723836839663 0.8872306883463706 0.40824829046386246; -0.5205873894647373 0.2496439529882974 -0.8164965809277261; -0.8263375405610782 -0.3879427823697744 0.40824829046386324]
+    P = [1 2 3; 4 5 6; 10 -1 5; 33 22 11; 6 5 4]
+    Q = P*R'   # this applies the rotation matrix R to all points P_i, i.e., Q_i = RP_i.
+    R_opt = optimal_rotation(P,Q)
+    return R_opt ≈ R'     # R_opt should undo the rotation R, i.e., be its inverse = transpose
+end
+
 
 @testset "Module Analysis" begin
     @test partial_means_test()
@@ -67,4 +75,5 @@ end
     @test test_determine_basis_inplane_3particle()
     @test test_transform_newbasis()
     @test test_calc_centroid()
+    @test test_optimal_rotation()
 end
