@@ -4,7 +4,7 @@ using LinearAlgebra
 
 export calc_partial_means, coordinates_single2multiple_vectors, calc_nuclear_COM, shift2neworig
 export determine_basis_inplane_3particle, transform_newbasis, project_coords_nuclearplane_3particle, calc_centroid
-export optimal_rotation, Rnuc_COMframe
+export optimal_rotation, Rnuc_COMframe, vecofvec_to_matrix, minRMSD
 
 function calc_partial_means(vec::Vector{T}) where T<:Real
     N = length(vec)
@@ -124,6 +124,7 @@ Returns a rotation matrix that minimizes the RMSD between two sets of points.
 Uses an SVD-based algorithm published by Markley (1988).
 P and Q are Nx3 matrices, i.e., rows correspond to different points, and columns
 correspond to x,y,z of a given point.
+The resulting rotation matrix must be applied to the points Q_i to minimize the RMSD.
 """
 function optimal_rotation(P::Matrix{T1}, Q::Matrix{T2}) where {T1 <: Real, T2 <: Real}
     H = P'*Q
@@ -136,7 +137,7 @@ end
 
 """
 Takes a pseudoparticle coordinate vector and returns particle coordinates for all nuclei (no electrons)
-in the all-particle COM frame.
+in the all-particle COM frame (i.e., the all-particle center of mass is the origin of the coordinate system).
 """
 function Rnuc_COMframe(r::Vector{T1}, masses::Vector{T2}, Nnuc::Integer) where {T1 <: Real, T2 <: Real}
     r_separate = coordinates_single2multiple_vectors(r)
@@ -148,6 +149,29 @@ function Rnuc_COMframe(r::Vector{T1}, masses::Vector{T2}, Nnuc::Integer) where {
         R_nuc_COM[i] = r_separate[i] - constshift
     end
     return R_nuc_COM
+end
+
+"""
+Turns a vector of Euclidean vectors into a Nx3 matrix where each of the original vectors appears as one row.
+"""
+function vecofvec_to_matrix(R::Vector{Vector{T}}) where T <: Real
+    return vcat(map(transpose, R)...)
+end
+
+"""
+Returns the minimal RMSD between points R1 and points R2 for any rotation matrix acting on the
+points R2.
+"""
+function minRMSD(R1::Vector{Vector{T1}}, R2::Vector{Vector{T2}}) where {T1 <: Real, T2 <: Real}
+    Nnuc = length(R1)
+    R1_matrix = vecofvec_to_matrix(R1)
+    R2_matrix = vecofvec_to_matrix(R2)
+    Uopt = optimal_rotation(R1_matrix, R2_matrix)
+
+    R2_rotated = map(x -> Uopt*x, R2)
+    diff = R1 .- R2_rotated
+    diffsquared = map(x -> x'*x, diff)
+    return sqrt((1/Nnuc)*sum(diffsquared))
 end
 
 end

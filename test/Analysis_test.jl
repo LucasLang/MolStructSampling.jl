@@ -74,6 +74,24 @@ function test_Rnuc_COMframe()
     return R_nuc_ref ≈ Rnuc_COMframe(r_pseudoparticle, masses, Nnuc)
 end
 
+function test_Ropt2()
+    R1 = [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 0.0, 2.0]]
+    R2 = [[0.0, 0.0, 0.0], [1.5, 0.0, 0.0], [3.0, 0.0, 0.0]]
+    R1_matrix = vecofvec_to_matrix(R1)
+    R2_matrix = vecofvec_to_matrix(R2)
+    Uopt = optimal_rotation(R1_matrix, R2_matrix)
+    Uopt_ref = [0.0 0.0 -1.0;
+                0.0 1.0 0.0;
+                1.0 0.0 0.0]
+    return Uopt ≈ Uopt_ref
+end
+
+function test_minRMSD()
+    R1 = [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 0.0, 2.0]]
+    R2 = [[0.0, 0.0, 0.0], [1.5, 0.0, 0.0], [3.0, 0.0, 0.0]]
+    return minRMSD(R1, R2) ≈ sqrt(1.25/3)
+end
+
 
 @testset "Module Analysis" begin
     @test partial_means_test()
@@ -85,4 +103,6 @@ end
     @test test_calc_centroid()
     @test test_optimal_rotation()
     @test test_Rnuc_COMframe()
+    @test test_Ropt2()
+    @test test_minRMSD()
 end
