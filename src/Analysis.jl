@@ -174,4 +174,16 @@ function minRMSD(R1::Vector{Vector{T1}}, R2::Vector{Vector{T2}}) where {T1 <: Re
     return sqrt((1/Nnuc)*sum(diffsquared))
 end
 
+function minRMSD(R1_matrix::Matrix{T1}, R2_matrix::Matrix{T2}) where {T1 <: Real, T2 <: Real}
+    Nnuc = size(R1_matrix)[1]
+    R1 = [R1_matrix[i,:] for i in 1:Nnuc]
+    R2 = [R2_matrix[i,:] for i in 1:Nnuc]
+    Uopt = optimal_rotation(R1_matrix, R2_matrix)
+
+    R2_rotated = map(x -> Uopt*x, R2)
+    diff = R1 .- R2_rotated
+    diffsquared = map(x -> x'*x, diff)
+    return sqrt((1/Nnuc)*sum(diffsquared))
+end
+
 end

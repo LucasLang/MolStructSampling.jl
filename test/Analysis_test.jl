@@ -92,6 +92,18 @@ function test_minRMSD()
     return minRMSD(R1, R2) ≈ sqrt(1.25/3)
 end
 
+function test_minRMSD2()
+    rot1 = [-0.8386577433025008 -0.35688886660368085 -0.41144079342366763; -0.08045115535302273 -0.6659529361392574 0.7416429723592515; -0.5386843242578357 0.6550855087252673 0.5297944649173267]
+    rot2 = [-0.10382531050662758 0.38218953092040714 -0.9182327958383111; 0.1280379522784344 -0.9104043268758157 -0.39340849556426455; -0.9863197187902855 -0.15841440610194413 0.04558824700315456]
+    R1 = [1 2 3; 5 1 2; -7 -7 -7; 3 2 1; 7 1 -5]
+    R2 = [5 1 0; -11 12 1; 7 3 -4; 1 1 2; 7 7 7]
+    R1_rot = R1*rot1'
+    R2_rot = R2*rot2'
+    dist1 = minRMSD(R1, R2)
+    dist2 = minRMSD(R1_rot, R2_rot)
+    return dist1 ≈ dist2
+end
+
 
 @testset "Module Analysis" begin
     @test partial_means_test()
@@ -105,4 +117,5 @@ end
     @test test_Rnuc_COMframe()
     @test test_Ropt2()
     @test test_minRMSD()
+    @test test_minRMSD2()
 end
