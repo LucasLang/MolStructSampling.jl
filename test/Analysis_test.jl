@@ -66,12 +66,12 @@ function test_optimal_rotation()
     return R_opt ≈ R'     # R_opt should undo the rotation R, i.e., be its inverse = transpose
 end
 
-function test_Rnuc_COMframe()
+function test_R_COMframe()
     masses = [1,2,3,4,5]
     r_pseudoparticle = [1.0, 2.0, 3.0, -1.0, -2.0, -3.0, 4.0, 3.0, 2.0, 1.0, 0.0, -1.0]
     Nnuc = 3
     R_nuc_ref = [[-4/3, -2/3, 0], [1-4/3, 2-2/3, 3], [-1-4/3, -2-2/3, -3]]
-    return R_nuc_ref ≈ Rnuc_COMframe(r_pseudoparticle, masses, Nnuc)
+    return R_nuc_ref ≈ R_COMframe(r_pseudoparticle, masses, Nnuc)
 end
 
 function test_Ropt2()
@@ -114,7 +114,7 @@ end
     @test test_transform_newbasis()
     @test test_calc_centroid()
     @test test_optimal_rotation()
-    @test test_Rnuc_COMframe()
+    @test test_R_COMframe()
     @test test_Ropt2()
     @test test_minRMSD()
     @test test_minRMSD2()

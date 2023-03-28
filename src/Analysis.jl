@@ -4,7 +4,7 @@ using LinearAlgebra
 
 export calc_partial_means, coordinates_single2multiple_vectors, calc_nuclear_COM, shift2neworig
 export determine_basis_inplane_3particle, transform_newbasis, project_coords_nuclearplane_3particle, calc_centroid
-export optimal_rotation, Rnuc_COMframe, vecofvec_to_matrix, minRMSD
+export optimal_rotation, R_COMframe, vecofvec_to_matrix, minRMSD
 
 function calc_partial_means(vec::Vector{T}) where T<:Real
     N = length(vec)
@@ -136,19 +136,34 @@ function optimal_rotation(P::Matrix{T1}, Q::Matrix{T2}) where {T1 <: Real, T2 <:
 end
 
 """
-Takes a pseudoparticle coordinate vector and returns particle coordinates for all nuclei (no electrons)
+Takes pseudoparticle vectors as inputs and returns rotation matrix that minimizes RMSD
+of positions in the COM frame.
+In order to align the two sets of coordinates, the resulting rotation matrix must be applied
+to the positions in r2.
+"""
+function optimal_rotation_pseudoparticle_COM(r1::Vector{T1}, r2:: Vector{T2}, masses::Vector{T3}, Nnuc::Integer) where {T1 <: Real, T2 <: Real, T3 <: Real}
+    R1_COM = R_COMframe(r1, masses, Nnuc)
+    R2_COM = R_COMframe(r2, masses, Nnuc)
+    R1_COM_matrix = vecofvec_to_matrix(R1_COM)
+    R2_COM_matrix = vecofvec_to_matrix(R2_COM)
+    return optimal_rotation(R1_COM_matrix, R2_COM_matrix)
+end
+
+
+"""
+Takes a pseudoparticle coordinate vector and returns particle coordinates for the first N particles
 in the all-particle COM frame (i.e., the all-particle center of mass is the origin of the coordinate system).
 """
-function Rnuc_COMframe(r::Vector{T1}, masses::Vector{T2}, Nnuc::Integer) where {T1 <: Real, T2 <: Real}
+function R_COMframe(r::Vector{T1}, masses::Vector{T2}, N::Integer) where {T1 <: Real, T2 <: Real}
     r_separate = coordinates_single2multiple_vectors(r)
     Mtot = sum(masses)
     constshift = (1/Mtot)*sum(masses .* r_separate)
-    R_nuc_COM = Vector{Vector{Float64}}(undef, Nnuc)
-    R_nuc_COM[1] = - constshift
-    for i in 2:Nnuc
-        R_nuc_COM[i] = r_separate[i] - constshift
+    R_COM = Vector{Vector{Float64}}(undef, N)
+    R_COM[1] = - constshift
+    for i in 2:N
+        R_COM[i] = r_separate[i] - constshift
     end
-    return R_nuc_COM
+    return R_COM
 end
 
 """
