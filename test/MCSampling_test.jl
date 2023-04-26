@@ -1,10 +1,8 @@
 using Test
 using Statistics
 
-include("../src/MCSampling.jl")
-using Main.MCSampling
-include("../src/ECWaveFunction.jl")
-using Main.ECWaveFunction
+using MolStructSampling.MCSampling
+using MolStructSampling.ECWaveFunction
 
 """
 Note that the mean of the exact probability distribution lies around 0.8.
@@ -52,7 +50,7 @@ function accepted_rejected_test()
     return sum(accepted_rejected) == nsteps
 end
 
-@testset "Module MCSampling" begin
+@testset "MCSampling.jl" begin
     @test MCrun_test()
     @test accepted_rejected_test()
 end

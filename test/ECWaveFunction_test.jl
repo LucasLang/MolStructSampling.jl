@@ -1,8 +1,7 @@
 using Test
 using LinearAlgebra
 
-include("../src/ECWaveFunction.jl")
-using Main.ECWaveFunction
+using MolStructSampling.ECWaveFunction
 
 function test_flattened_to_lower()
     n = 3
@@ -532,7 +531,7 @@ end
 
 
 
-@testset "Module ECWaveFunction" begin
+@testset "ECWaveFunction.jl" begin
     @test test_flattened_to_lower()
     @test test_flattened_to_symmetric()
     @test_throws ErrorException test_Transposition_wrongorder()

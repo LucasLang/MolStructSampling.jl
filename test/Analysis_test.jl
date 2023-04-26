@@ -1,7 +1,6 @@
 using Test
 
-include("../src/Analysis.jl")
-using Main.Analysis
+using MolStructSampling.Analysis
 
 function partial_means_test()
     vec = [1, 4, 2, 11, 21, 3, 3, 2]
@@ -105,7 +104,7 @@ function test_minRMSD2()
 end
 
 
-@testset "Module Analysis" begin
+@testset "Analysis.jl" begin
     @test partial_means_test()
     @test test_coordinates_single2multiple_vectors()
     @test test_calc_nuclear_COM()
