@@ -37,7 +37,7 @@ function MCrun(prob_dens::Function, n::Integer, nsteps::Integer, r_start::Vector
 end
 
 """
-    width: the width of the three sides of the cube from which we draw the displacement
+    width: the length of the three edges of the cube from which we draw the displacement
 """
 function get_random_displacement(width)
     return [width*(rand()-0.5) for i in 1:3]
