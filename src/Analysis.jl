@@ -4,7 +4,7 @@ using LinearAlgebra
 
 export calc_partial_means, coordinates_single2multiple_vectors, calc_nuclear_COM, shift2neworig
 export determine_basis_inplane_3particle, transform_newbasis, project_coords_nuclearplane_3particle, calc_centroid
-export optimal_rotation, R_COMframe, vecofvec_to_matrix, minRMSD
+export optimal_rotation, R_COMframe, R_nucCOMframe, vecofvec_to_matrix, minRMSD
 
 function calc_partial_means(vec::Vector{T}) where T<:Real
     N = length(vec)
@@ -100,12 +100,25 @@ masses: The masses of all particles
 Nnuc: The number of nuclei in the molecule (whose coordinates are assumed to come first in vector)
 """
 function project_coords_nuclearplane_3particle(r::Vector{T1}, masses::Vector{T2}, Nnuc::Integer) where {T1 <: Real, T2 <: Real}
+    individualvectors_COM = R_nucCOMframe(r, masses, Nnuc)
+    B = determine_basis_inplane_3particle(individualvectors_COM[1:Nnuc])
+    return transform_newbasis(individualvectors_COM, B)
+end
+
+"""
+This function takes a vector of pseudoparticle coordinates and returns a vector of 3-component particle
+coordinates in a coordinate system where the nuclear center of mass is in the origin.
+
+r: A pseudoparticle vector (containing coordinates of all pseudoparticles in a single vector)
+masses: The masses of all particles
+Nnuc: The number of nuclei in the molecule (whose coordinates are assumed to come first in vector)
+"""
+function R_nucCOMframe(r::Vector{T1}, masses::Vector{T2}, Nnuc::Integer) where {T1 <: Real, T2 <: Real}
     individualvectors = coordinates_single2multiple_vectors(r)
     # important: we assume that the coordinates of all nuclei come before the first non-nucleus!
     nuclear_COM = calc_nuclear_COM(individualvectors[1:Nnuc], masses[1:Nnuc])
     individualvectors_COM = shift2neworig(individualvectors, nuclear_COM)
-    B = determine_basis_inplane_3particle(individualvectors_COM[1:Nnuc])
-    return transform_newbasis(individualvectors_COM, B)
+    return individualvectors_COM
 end
 
 """
