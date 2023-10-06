@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/633839956.svg)](https://zenodo.org/badge/latestdoi/633839956)
+
 # MolStructSampling.jl
 
 This is a package for
